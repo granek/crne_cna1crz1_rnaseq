@@ -1,0 +1,11 @@
+* Download RNA-seq data
+wget --no-parent --no-host-directories --no-directories -P /nfs/gems_sata/heitman/calcineurin_reg/rnaseq/raw_fastqs --recursive --accept "*.fastq.gz" http://panic.med.unc.edu/guan/files/pio/SE_131209_UNC10-SN254_0501_AC2T7UACXX/
+* sshfs
+  - sshfs -oreconnect,kill_on_unmount,volname="Microbe"  microbe:/nfs/gems_sata/heitman/calcineurin_reg/rnaseq/ /Users/josh/Documents/BioinfCollabs/HeitmanLab/calcineurin_reg/test_make/sshmicrobe
+  - http://code.google.com/p/macfuse/wiki/MACFUSE_FS_SSHFS
+  - sshfs user@server:/remotedirectory/ /mountpath -oping_diskarb,volname=volumename
+  - https://muffinresearch.co.uk/macfuse-sshfs-for-your-mac/
+  - http://osxfuse.github.io/
+  - http://pdb.finkproject.org/pdb/package.php/sshfs
+* IGV
+  bash $COLLAB/software/viz/IGV_2.3.12/igv.sh $COLLAB/HeitmanLab/calcineurin_reg/calcineurin_igv.xml

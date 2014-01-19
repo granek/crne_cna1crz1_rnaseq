@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Session genome="/Users/josh/Documents/BioinfCollabs/HeitmanLab/calcineurin_reg/test_make/genome/h99_2.fa" locus="Chromosome_2.1:1134608-1153749" version="5">
+    <Resources>
+        <Resource path="/Users/josh/Documents/BioinfCollabs/HeitmanLab/calcineurin_reg/test_make/genome/h99_2.gtf"/>
+    </Resources>
+    <Panel height="495" name="FeaturePanel" width="1667">
+        <Track altColor="0,0,178" autoScale="false" color="0,0,178" displayMode="COLLAPSED" featureVisibilityWindow="-1" fontSize="10" id="Reference sequence" name="Reference sequence" sortable="false" visible="true"/>
+        <Track altColor="0,0,178" autoScale="false" clazz="org.broad.igv.track.FeatureTrack" color="0,0,178" colorScale="ContinuousColorScale;0.0;15.0;255,255,255;0,0,178" displayMode="COLLAPSED" featureVisibilityWindow="-1" fontSize="10" height="45" id="/Users/josh/Documents/BioinfCollabs/HeitmanLab/calcineurin_reg/test_make/genome/h99_2.gtf" name="h99_2.gtf" renderer="GENE_TRACK" sortable="false" visible="true" windowFunction="count">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="15.0" minimum="0.0" type="LINEAR"/>
+        </Track>
+    </Panel>
+    <PanelLayout dividerFractions="0.011857707509881422"/>
+</Session>
