@@ -1,7 +1,8 @@
 # make all  -l 16 -j # for parallel make
 
 .PHONY: clean test
-.PRECIOUS: %.bam
+# .PRECIOUS:
+.SECONDARY: %.bam
 
 #--------------------------------------------------
 GENOME_DIR=genome
