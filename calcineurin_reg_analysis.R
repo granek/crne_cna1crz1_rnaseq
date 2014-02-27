@@ -1,5 +1,4 @@
 library("DESeq2")
-## library("pasilla")
 
 basedir=("/Users/josh/Documents/BioinfCollabs/HeitmanLab/calcineurin_reg")
 countdir=file.path(basedir,"counts")
@@ -36,6 +35,8 @@ ddsHTSeq <- DESeq(ddsHTSeq)
 res <- results(ddsHTSeq)
 head(res)
 resultsNames(ddsHTSeq)
+resultsNames(ddsHTSeq)[3:6]
+
 # resType <- results(dds, "type_single.read_vs_paired.end")
 # head(resType)
 ##----
@@ -43,14 +44,44 @@ resultsNames(ddsHTSeq)
 # res <- results(dds)
 # res <- res[order(res$padj),]
 # head(res)
+fdrcutoff = 0.05
 KICNA1.res = results(ddsHTSeq,"condition_KI_CNA1_vs_WT")
 KICNA1.res = KICNA1.res[order(KICNA1.res$padj),]
-table(KICNA1.res$padj < 0.2)
+table(KICNA1.res$padj < fdrcutoff)
 ##-------
 KICRZ1.res = results(ddsHTSeq,"condition_KI_CRZ1_vs_WT")
 KICRZ1.res = KICRZ1.res[order(KICRZ1.res$padj),]
-table(KICRZ1.res$padj < 0.2)
-##------- CRZ1 overexpression
+table(KICRZ1.res$padj < fdrcutoff)
+##-------
+KOcna1.res = results(ddsHTSeq,"condition_KO_cna1_vs_WT")
+KOcna1.res = KOcna1.res[order(KOcna1.res$padj),]
+table(KOcna1.res$padj < fdrcutoff)
+KOcna1Genes = row.names(KOcna1.res[which(KOcna1.res$padj < fdrcutoff),])
+##-------
+KOcrz1.res = results(ddsHTSeq,"condition_KO_crz1_vs_WT")
+KOcrz1.res = KOcrz1.res[order(KOcrz1.res$padj),]
+table(KOcrz1.res$padj < fdrcutoff)
+KOcrz1Genes = row.names(KOcrz1.res[which(KOcrz1.res$padj < fdrcutoff),])
+##-------
+length(row.names(KOcna1.res))
+length(intersect(KOcna1Genes,KOcrz1Genes))
+length(setdiff(KOcna1Genes,KOcrz1Genes))
+length(setdiff(KOcrz1Genes,KOcna1Genes))
+
+fileend=paste(fdrcutoff*100,"fdr.csv",sep="")
+write.csv(intersect(KOcna1Genes,KOcrz1Genes),file=file.path(outdir,paste("cna1ko_crz1ko_intersect",fileend,sep="_")))
+write.csv(setdiff(KOcna1Genes,KOcrz1Genes),file=file.path(outdir,paste("cna1ko_unique",fileend,sep="_")))
+write.csv(setdiff(KOcrz1Genes,KOcna1Genes),file=file.path(outdir,paste("crz1ko_unique",fileend,sep="_")))
+##-------
+get.genes.counts = function(comparison,dds,fdr){
+    cur.res = results(dds,comparison)
+    # return(row.names(cur.res[which(cur.res$padj < fdr),]))
+    return(sum(cur.res$padj < fdr,na.rm = TRUE))
+}
+mapply(FUN=get.genes.counts,resultsNames(ddsHTSeq),MoreArgs = list(dds=ddsHTSeq,fdr=0.2))
+mapply(FUN=get.genes.counts,resultsNames(ddsHTSeq),MoreArgs = list(dds=ddsHTSeq,fdr=0.05))
+
+##------- CRZ1 overexpression ------
 cna1.id="CNAG_04796"
 crz1.id="CNAG_00156"
 crz1mat = counts(ddsHTSeq,normalized=TRUE)[c(cna1.id,crz1.id),]
@@ -74,3 +105,19 @@ pdf(sampleComparePlots)
 heatmap.2(mat, trace="none", col = rev(hmcol), margin=c(7, 7))
 plotPCA(rld, intgroup=c("condition", "temp"))
 dev.off()
+
+##------- Normalized Counts Table ------
+# head(counts(ddsHTSeq,normalized=TRUE))
+# with(colData(ddsHTSeq),paste(row.names(colData(ddsHTSeq)),paste(condition, temp, sep="_"),sep=":"))
+ddsHTSeq.counts = counts(ddsHTSeq,normalized=TRUE)
+coldat = colData(ddsHTSeq)
+colnames(ddsHTSeq.counts) = paste(row.names(coldat),paste(coldat$condition, coldat$temp, sep="_"),sep=":")
+
+fileend=paste(fdrcutoff*100,"fdr_counts.csv",sep="")
+write.csv(ddsHTSeq.counts[intersect(KOcna1Genes,KOcrz1Genes),],
+          file=file.path(outdir,paste("cna1ko_crz1ko_intersect",fileend,sep="_")))
+write.csv(ddsHTSeq.counts[setdiff(KOcna1Genes,KOcrz1Genes),],
+          file=file.path(outdir,paste("cna1ko_unique",fileend,sep="_")))
+write.csv(ddsHTSeq.counts[setdiff(KOcrz1Genes,KOcna1Genes),],
+                          file=file.path(outdir,paste("crz1ko_unique",fileend,sep="_")))
+

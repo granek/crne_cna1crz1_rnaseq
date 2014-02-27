@@ -37,9 +37,9 @@ dir_guard=@mkdir -p $(@D)
 
 all:  test results todo 
 
-results : $(READ_COUNTS) $(FINAL_BAIS)
+results : $(READ_COUNTS) $(FINAL_BAIS) $(FINAL_BAMS) 
 
-under_development : $(READ_COUNTS) $(FINAL_BAIS) # $(BT2_INDEX_FILES) $(FINAL_FASTQS) $(FINAL_BAMS) 
+under_development : $(READ_COUNTS) $(FINAL_BAIS) $(FINAL_BAMS) # $(BT2_INDEX_FILES) $(FINAL_FASTQS) 
 
 todo:
 	@echo "BETTER READ FILTERING"

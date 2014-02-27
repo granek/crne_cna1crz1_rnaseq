@@ -1,7 +1,7 @@
 * Download RNA-seq data
 wget --no-parent --no-host-directories --no-directories -P /nfs/gems_sata/heitman/calcineurin_reg/rnaseq/raw_fastqs --recursive --accept "*.fastq.gz" http://panic.med.unc.edu/guan/files/pio/SE_131209_UNC10-SN254_0501_AC2T7UACXX/
 * sshfs
-  - sshfs -oreconnect,kill_on_unmount,volname="Microbe"  microbe:/nfs/gems_sata/heitman/calcineurin_reg/rnaseq/ /Users/josh/Documents/BioinfCollabs/HeitmanLab/calcineurin_reg/test_make/sshmicrobe
+  - sshfs -oreconnect,kill_on_unmount,volname="Microbe"  microbe:/nfs/gems_sata/heitman/calcineurin_reg/rnaseq/ /Users/josh/mountpoint
   - http://code.google.com/p/macfuse/wiki/MACFUSE_FS_SSHFS
   - sshfs user@server:/remotedirectory/ /mountpath -oping_diskarb,volname=volumename
   - https://muffinresearch.co.uk/macfuse-sshfs-for-your-mac/
@@ -9,3 +9,7 @@ wget --no-parent --no-host-directories --no-directories -P /nfs/gems_sata/heitma
   - http://pdb.finkproject.org/pdb/package.php/sshfs
 * IGV
   bash $COLLAB/software/viz/IGV_2.3.12/igv.sh $COLLAB/HeitmanLab/calcineurin_reg/calcineurin_igv.xml
+* plot_pileup
+  # python2.7 $SCRIPTS/plot_pileup.py --table $MUCOR/configs/tophat_bam_tab_color1.csv   --region scaffold_03:1-20000 -o  $MUCOR/for_mucor_srna_manuscript/scaffold3_subset_c1.pdf --linewidth 2 --subplot
+  # python2.7 $SCRIPTS/plot_pileup.py --gff  $MUCOR/for_mucor_srna_manuscript/Mucor_circinelloides_v2_filtered_genes_editted.gff --lwvar="-2" --linewidth 5 --legendsize 12 --noxlabel --gene Genemark1.4277_g --table $MUCOR/configs/tophat_bam_tab_em3_c2.csv --ymax 422 -o  $MUCOR/for_mucor_srna_manuscript/fkba_readstack_em3_lwvar.pdf
+  
