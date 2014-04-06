@@ -1,6 +1,6 @@
 library("DESeq2")
 
-basedir=("/Users/josh/Documents/BioinfCollabs/HeitmanLab/calcineurin_reg")
+basedir=Sys.getenv("CNA")
 countdir=file.path(basedir,"counts")
 counttab.file=file.path(basedir,"info","calcineurin_sample_table.csv")
 outdir=file.path(basedir,"results")
@@ -44,7 +44,8 @@ resultsNames(ddsHTSeq)[3:6]
 # res <- results(dds)
 # res <- res[order(res$padj),]
 # head(res)
-fdrcutoff = 0.05
+# fdrcutoff = 0.05
+fdrcutoff = 0.2
 KICNA1.res = results(ddsHTSeq,"condition_KI_CNA1_vs_WT")
 KICNA1.res = KICNA1.res[order(KICNA1.res$padj),]
 table(KICNA1.res$padj < fdrcutoff)
@@ -121,3 +122,35 @@ write.csv(ddsHTSeq.counts[setdiff(KOcna1Genes,KOcrz1Genes),],
 write.csv(ddsHTSeq.counts[setdiff(KOcrz1Genes,KOcna1Genes),],
                           file=file.path(outdir,paste("crz1ko_unique",fileend,sep="_")))
 
+##------- Annotate Gene Lists ------
+##------------ Load Annotation --------
+annotdir = file.path(Sys.getenv("BREM"),"cneo_hybrid_rnaseq/info")
+## wget http://fungalgenomes.org/public/cryptococcus/CryptoDB/product_names/Cneo_H99.AHRD.20131001.tab
+ahrd.annot = read.delim(file.path(annotdir,"Cneo_H99.AHRD.20131001.tab"),stringsAsFactors = FALSE)
+## http://fungidb.org/fungidb/
+fungidb.annot = read.delim(file.path(annotdir,"h99_GenesByTaxon_summary.txt"),
+                           stringsAsFactors = FALSE, colClasses = c("character", rep("NULL", 2),"character","NULL"),
+                           col.names=c("ID", "organism", "genomeloc", "description","empty"))
+annot.df = merge(fungidb.annot, ahrd.annot, by="ID",all = TRUE)
+rownames(annot.df) = annot.df$ID
+annot.df$ID = NULL
+##------------ Extract Genes of Interest --------
+
+fileend=paste(fdrcutoff*100,"fdr_annot.csv",sep="")
+write.csv(annot.df[intersect(KOcna1Genes,KOcrz1Genes),],
+          file=file.path(outdir,paste("cna1ko_crz1ko_intersect",fileend,sep="_")))
+write.csv(annot.df[setdiff(KOcna1Genes,KOcrz1Genes),],
+          file=file.path(outdir,paste("cna1ko_unique",fileend,sep="_")))
+write.csv(annot.df[setdiff(KOcrz1Genes,KOcna1Genes),],
+                          file=file.path(outdir,paste("crz1ko_unique",fileend,sep="_")))
+##------- Individual Comparisons ------
+# WT_24C <-> KO_crz1_24C
+# WT_24C <-> KO_cna1_24C
+# KO_cna1_24C <->  KO_crz1_24C
+
+# WT_37C <-> KO_crz1_37C
+# WT_37C <-> KO_cna1_37C
+# KO_cna1_37C <->  KO_crz1_37C
+
+# KO_cna1_24C <->  KO_cna1_37C
+# KO_crz1_24C <->  KO_crz1_37C

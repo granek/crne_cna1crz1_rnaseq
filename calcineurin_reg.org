@@ -12,4 +12,9 @@ wget --no-parent --no-host-directories --no-directories -P /nfs/gems_sata/heitma
 * plot_pileup
   # python2.7 $SCRIPTS/plot_pileup.py --table $MUCOR/configs/tophat_bam_tab_color1.csv   --region scaffold_03:1-20000 -o  $MUCOR/for_mucor_srna_manuscript/scaffold3_subset_c1.pdf --linewidth 2 --subplot
   # python2.7 $SCRIPTS/plot_pileup.py --gff  $MUCOR/for_mucor_srna_manuscript/Mucor_circinelloides_v2_filtered_genes_editted.gff --lwvar="-2" --linewidth 5 --legendsize 12 --noxlabel --gene Genemark1.4277_g --table $MUCOR/configs/tophat_bam_tab_em3_c2.csv --ymax 422 -o  $MUCOR/for_mucor_srna_manuscript/fkba_readstack_em3_lwvar.pdf
-  
+* TODO [#A] TF-Motif Analysis
+** MEME Tools
+   - [[http://meme.nbcr.net/meme/fimo-intro.html][FIMO "Find Individual Motif Occurrences"]]
+   - [[http://meme.nbcr.net/meme/doc/ame.html][AME (Analysis of Motif Enrichment)]]
+   - [[http://meme.nbcr.net/meme/doc/meme-format.html][MEME Suite Motif File Formats]]
+   - [[http://meme.nbcr.net/meme/examples/sample-dna-motif.meme-io][MEME Sample File]]

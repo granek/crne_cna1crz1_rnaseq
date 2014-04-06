@@ -116,6 +116,15 @@ $(COUNT_DIR)/%_counts.tab : $(TOPHAT_BASE_DIR)/%/accepted_hits.bam $(GTF)
 	samtools view $< | htseq-count --stranded=no --type=exon --idattr=gene_id - $(word 2,$^) 1> $(TEMP_OUT) 2> $(TEMP_ERR)
 	mv $(TEMP_OUT) $@
 	mv $(TEMP_ERR) $(ERR)
+
+#===============================================================================
+# Run Analysis in R
+#=============================
+## wget http://fungalgenomes.org/public/cryptococcus/CryptoDB/product_names/Cneo_H99.AHRD.20131001.tab
+deseq :
+	Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R
+	printf '\a';printf '\a';printf '\a'
+	printf '\a';printf '\a';printf '\a'
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -130,6 +139,8 @@ $(COUNT_DIR)/%_counts.tab : $(TOPHAT_BASE_DIR)/%/accepted_hits.bam $(GTF)
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 # BEGIN IN PROGRESS
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+#===============================================================================
 
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 # END IN PROGRESS 
