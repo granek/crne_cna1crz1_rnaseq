@@ -121,8 +121,8 @@ $(COUNT_DIR)/%_counts.tab : $(TOPHAT_BASE_DIR)/%/accepted_hits.bam $(GTF)
 # Run Analysis in R
 #=============================
 ## wget http://fungalgenomes.org/public/cryptococcus/CryptoDB/product_names/Cneo_H99.AHRD.20131001.tab
-deseq :
-	Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R
+deseq : 
+	Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --usecwd
 	printf '\a';printf '\a';printf '\a'
 	printf '\a';printf '\a';printf '\a'
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

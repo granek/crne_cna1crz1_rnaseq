@@ -1,9 +1,22 @@
 library("DESeq2")
+library("RColorBrewer")
+library("gplots")
 
-basedir=Sys.getenv("CNA")
+args <- commandArgs(trailingOnly = TRUE)
+print(args)
+
+
+if ("--usecwd" %in% args) {
+    ## outdir<<-file.path(".","results")
+    basedir<<-"."
+} else {
+    ## outdir<<-file.path(basedir,"results")
+    basedir<<-Sys.getenv("CNA")
+}
+outdir=file.path(basedir,"results")
+dir.create(outdir)
 countdir=file.path(basedir,"counts")
 counttab.file=file.path(basedir,"info","calcineurin_sample_table.csv")
-outdir=file.path(basedir,"results")
 sampleComparePlots = file.path(outdir,"sample_compare_plots.pdf")
 
 sampleData = read.csv(counttab.file,colClasses=c("character","numeric","character","factor","factor"))
@@ -87,12 +100,11 @@ cna1.id="CNAG_04796"
 crz1.id="CNAG_00156"
 crz1mat = counts(ddsHTSeq,normalized=TRUE)[c(cna1.id,crz1.id),]
 colnames(crz1mat) = with(colData(ddsHTSeq),paste(condition, temp, sep=" : "))
+hmcol <- colorRampPalette(brewer.pal(9, "GnBu"))(100)
 pdf(file.path(outdir,"crz1_overexpress.pdf"))
 heatmap.2(t(crz1mat), trace="none", col = rev(hmcol), margin=c(7, 7),cexCol=1)
 dev.off()
 ##----- Heatmap of the sample-to-sample distances------
-library("RColorBrewer")
-library("gplots")
 # select <- order(rowMeans(counts(dds,normalized=TRUE)),decreasing=TRUE)[1:30] 
 hmcol <- colorRampPalette(brewer.pal(9, "GnBu"))(100)
 
