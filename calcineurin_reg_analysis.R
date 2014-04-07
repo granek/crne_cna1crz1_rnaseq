@@ -113,6 +113,7 @@ ExportNormedCounts = function(KOcna1Genes,KOcrz1Genes,ddsHTSeq,fdrcutoff,outdir)
     colnames(ddsHTSeq.counts) = paste(row.names(coldat),paste(coldat$condition, coldat$temp, sep="_"),sep=":")
 
     fileend=paste(fdrcutoff*100,"fdr_counts.csv",sep="")
+    write.csv(ddsHTSeq.counts,file=file.path(outdir,"cna1_crz1_allcounts.csv"))
     write.csv(ddsHTSeq.counts[intersect(KOcna1Genes,KOcrz1Genes),],
               file=file.path(outdir,paste("cna1ko_crz1ko_intersect",fileend,sep="_")))
     write.csv(ddsHTSeq.counts[setdiff(KOcna1Genes,KOcrz1Genes),],
@@ -144,14 +145,15 @@ AnnotateGeneLists = function(KOcna1Genes,KOcrz1Genes,fdrcutoff,annotdir, outdir)
     write.csv(annot.df[setdiff(KOcrz1Genes,KOcna1Genes),],
               file=file.path(outdir,paste("crz1ko_unique",fileend,sep="_")))
 }
-##-------
-get.genes.counts = function(comparison,dds,fdr){
-    cur.res = results(dds,comparison)
-    # return(row.names(cur.res[which(cur.res$padj < fdr),]))
-    return(sum(cur.res$padj < fdr,na.rm = TRUE))
-}
-mapply(FUN=get.genes.counts,resultsNames(ddsHTSeq),MoreArgs = list(dds=ddsHTSeq,fdr=0.2))
-mapply(FUN=get.genes.counts,resultsNames(ddsHTSeq),MoreArgs = list(dds=ddsHTSeq,fdr=0.05))
+##===========================================================================
+##===========================================================================
+## get.genes.counts = function(comparison,dds,fdr){
+##     cur.res = results(dds,comparison)
+##     # return(row.names(cur.res[which(cur.res$padj < fdr),]))
+##     return(sum(cur.res$padj < fdr,na.rm = TRUE))
+## }
+## mapply(FUN=get.genes.counts,resultsNames(ddsHTSeq),MoreArgs = list(dds=ddsHTSeq,fdr=0.2))
+## mapply(FUN=get.genes.counts,resultsNames(ddsHTSeq),MoreArgs = list(dds=ddsHTSeq,fdr=0.05))
 ##===========================================================================
 ##===========================================================================
 # fdrcutoff = 0.05
