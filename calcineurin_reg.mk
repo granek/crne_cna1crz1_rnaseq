@@ -33,6 +33,9 @@ FINAL_BAIS := $(addsuffix .bai,$(FINAL_BAMS))
 #--------------------------------------------------
 COUNT_DIR=counts
 READ_COUNTS := $(patsubst %$(FASTQ_SUFFIX),$(COUNT_DIR)/%_counts.tab,$(FASTQS))
+
+INFO_DIR=info
+CNEO_ANNOT=$(INFO_DIR)/Cneo_H99.AHRD.20131001.tab
 #--------------------------------------------------
 dir_guard=@mkdir -p $(@D)
 
@@ -121,7 +124,12 @@ $(COUNT_DIR)/%_counts.tab : $(TOPHAT_BASE_DIR)/%/accepted_hits.bam $(GTF)
 # Run Analysis in R
 #=============================
 ## wget http://fungalgenomes.org/public/cryptococcus/CryptoDB/product_names/Cneo_H99.AHRD.20131001.tab
-deseq : 
+
+$(CNEO_ANNOT) :
+	$(dir_guard)
+	wget --no-directories --directory-prefix $(@D) http://fungalgenomes.org/public/cryptococcus/CryptoDB/product_names/Cneo_H99.AHRD.20131001.tab
+
+deseq : $(CNEO_ANNOT)
 	Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --usecwd
 	printf '\a';printf '\a';printf '\a'
 	printf '\a';printf '\a';printf '\a'
