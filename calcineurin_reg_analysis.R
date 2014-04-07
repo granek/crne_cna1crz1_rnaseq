@@ -28,20 +28,6 @@ sampleTable <- subset(sampleTable, select = c(sampleName,fileName,condition,temp
 ddsHTSeq <- DESeqDataSetFromHTSeqCount(sampleTable = sampleTable,
                                            directory = countdir,
                                            design= ~ condition)
-#colData(x)$condition <- factor(colData(x)$condition, levels=c("Control","A","B"))
-##    directory <- system.file("extdata", package="pasilla", mustWork=TRUE)
-##    sampleFiles <- grep("treated",list.files(directory),value=TRUE)
-##    sampleCondition <- sub("(.*treated).*","\\1",sampleFiles)
-##    sampleTable <- data.frame(sampleName = sampleFiles,
-##                              fileName = sampleFiles,
-##                              condition = sampleCondition)
-##    ddsHTSeq <- DESeqDataSetFromHTSeqCount(sampleTable = sampleTable,
-##                                           directory = directory,
-##                                           design= ~ condition)
-##    colData(ddsHTSeq)$condition <- factor(colData(ddsHTSeq)$condition,
-##                                          levels=c("untreated","treated"))
-## ddsHTSeq
-
 ## design(dds) <- formula(~ type + condition)
 design(ddsHTSeq) <- formula(~ temp + condition)
 ddsHTSeq <- DESeq(ddsHTSeq)
@@ -50,13 +36,6 @@ head(res)
 resultsNames(ddsHTSeq)
 resultsNames(ddsHTSeq)[3:6]
 
-# resType <- results(dds, "type_single.read_vs_paired.end")
-# head(resType)
-##----
-# dds <- DESeq(dds)
-# res <- results(dds)
-# res <- res[order(res$padj),]
-# head(res)
 # fdrcutoff = 0.05
 fdrcutoff = 0.2
 KICNA1.res = results(ddsHTSeq,"condition_KI_CNA1_vs_WT")
