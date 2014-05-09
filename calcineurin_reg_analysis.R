@@ -42,31 +42,55 @@ resultsNames(ddsHTSeq)[3:6]
 
 
 
-FindDiffGenes = function(fdrcutoff, ddsHTSeq,outdir){
+FindDiffGenes = function(ddsHTSeq,outdir, fdrcutoff=0.05, fccutoff=2){
+    log2fc = log2(fccutoff)
+    ##-------
     KICNA1.res = results(ddsHTSeq,"condition_KI_CNA1_vs_WT")
     KICNA1.res = KICNA1.res[order(KICNA1.res$padj),]
-    table(KICNA1.res$padj < fdrcutoff)
+    print("KICNA1")
+    print(
+        table(KICNA1.res$padj < fdrcutoff,
+              abs(KICNA1.res$log2FoldChange) >= log2fc,
+              dnn=c(paste("FDR<",fdrcutoff), paste("FC>",fccutoff)))
+        )
     ##-------
     KICRZ1.res = results(ddsHTSeq,"condition_KI_CRZ1_vs_WT")
     KICRZ1.res = KICRZ1.res[order(KICRZ1.res$padj),]
-    table(KICRZ1.res$padj < fdrcutoff)
+    print("KICRZ1")
+    print(
+        table(KICRZ1.res$padj < fdrcutoff,
+              abs(KICRZ1.res$log2FoldChange) >= log2fc,
+              dnn=c(paste("FDR<",fdrcutoff), paste("FC>",fccutoff)))
+        )
     ##-------
     KOcna1.res = results(ddsHTSeq,"condition_KO_cna1_vs_WT")
     KOcna1.res = KOcna1.res[order(KOcna1.res$padj),]
-    table(KOcna1.res$padj < fdrcutoff)
-    KOcna1Genes = row.names(KOcna1.res[which(KOcna1.res$padj < fdrcutoff),])
+    print("KOcna1")
+    print(
+        table(KOcna1.res$padj < fdrcutoff,
+              abs(KOcna1.res$log2FoldChange) >= log2fc,
+              dnn=c(paste("FDR<",fdrcutoff), paste("FC>",fccutoff)))
+        )
+    KOcna1Genes = row.names(KOcna1.res[which((KOcna1.res$padj < fdrcutoff) &
+        (abs(KOcna1.res$log2FoldChange) >= log2fc)),])
     ##-------
     KOcrz1.res = results(ddsHTSeq,"condition_KO_crz1_vs_WT")
     KOcrz1.res = KOcrz1.res[order(KOcrz1.res$padj),]
-    table(KOcrz1.res$padj < fdrcutoff)
-    KOcrz1Genes = row.names(KOcrz1.res[which(KOcrz1.res$padj < fdrcutoff),])
+    print("KOcrz1")
+    print(
+        table(KOcrz1.res$padj < fdrcutoff,
+              abs(KOcrz1.res$log2FoldChange) >= log2fc,
+              dnn=c(paste("FDR<",fdrcutoff), paste("FC>",fccutoff)))
+        )
+    KOcrz1Genes = row.names(KOcrz1.res[which((KOcrz1.res$padj < fdrcutoff) &
+        (abs(KOcrz1.res$log2FoldChange) >= log2fc)),])
     ##-------
     length(row.names(KOcna1.res))
     length(intersect(KOcna1Genes,KOcrz1Genes))
     length(setdiff(KOcna1Genes,KOcrz1Genes))
     length(setdiff(KOcrz1Genes,KOcna1Genes))
 
-    fileend=paste(fdrcutoff*100,"fdr.csv",sep="")
+    fileend=paste(fdrcutoff*100,"fdr_", fccutoff,"fc.csv",sep="")
     write.csv(intersect(KOcna1Genes,KOcrz1Genes),file=file.path(outdir,paste("cna1ko_crz1ko_intersect",fileend,sep="_")))
     write.csv(setdiff(KOcna1Genes,KOcrz1Genes),file=file.path(outdir,paste("cna1ko_unique",fileend,sep="_")))
     write.csv(setdiff(KOcrz1Genes,KOcna1Genes),file=file.path(outdir,paste("crz1ko_unique",fileend,sep="_")))
@@ -81,6 +105,37 @@ Crz1OverexpressHeatmap = function(ddsHTSeq,outdir){
     hmcol <- colorRampPalette(brewer.pal(9, "GnBu"))(100)
     pdf(file.path(outdir,"crz1_overexpress.pdf"))
     heatmap.2(t(crz1mat), trace="none", col = rev(hmcol), margin=c(7, 7),cexCol=1)
+    dev.off()
+}
+
+##------- GenesOfInterestHeatmap ------
+GenesOfInterestHeatmap = function(genes.of.interest,ddsHTSeq,outfile){
+    hmcol <- colorRampPalette(brewer.pal(9, "GnBu"))(100)
+    # pdf(outfile)
+    ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ## Raw counts
+    png(paste(outfile,"_raw.png",sep=""),width = 8, height = 10, units = "in", res = 300)
+    goimat = counts(ddsHTSeq,normalized=TRUE)[genes.of.interest,]
+    colnames(goimat) = with(colData(ddsHTSeq),paste(condition, temp, sep=" : "))
+    heatmap.2(goimat, trace="none", col = rev(hmcol), margin=c(7, 7),cexCol=1)
+    dev.off()
+    ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ## Regularized log transformation
+    png(paste(outfile,"_rld.png",sep=""),width = 8, height = 10, units = "in", res = 300)
+    rld <- rlogTransformation(ddsHTSeq, blind=FALSE)
+    goimat = assay(rld)[genes.of.interest,]
+    colnames(goimat) = with(colData(rld),paste(condition, temp, sep=" : "))
+    heatmap.2(goimat, trace="none", col = rev(hmcol), margin=c(7, 7),cexCol=1)
+    dev.off()
+    ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ## Regularized log transformation
+    png(paste(outfile,"_vsd.png",sep=""),width = 8, height = 10, units = "in", res = 300)
+    # rld <- rlogTransformation(ddsHTSeq, blind=TRUE)
+    # vsd <- varianceStabilizingTransformation(dds, blind=TRUE)
+    vsd <- varianceStabilizingTransformation(ddsHTSeq, blind=FALSE)
+    goimat = assay(vsd)[genes.of.interest,]
+    colnames(goimat) = with(colData(vsd),paste(condition, temp, sep=" : "))
+    heatmap.2(goimat, trace="none", col = rev(hmcol), margin=c(7, 7),cexCol=1)
     dev.off()
 }
 ##----- Heatmap of the sample-to-sample distances------
@@ -105,14 +160,16 @@ SampleSampleDistHeatmap = function(ddsHTSeq,outdir){
 }
 
 ##------- Normalized Counts Table ------
-ExportNormedCounts = function(KOcna1Genes,KOcrz1Genes,ddsHTSeq,fdrcutoff,outdir){
+ExportNormedCounts = function(KOcna1Genes,KOcrz1Genes,ddsHTSeq,fdrcutoff,fccutoff,outdir){
     ## head(counts(ddsHTSeq,normalized=TRUE))
     ## with(colData(ddsHTSeq),paste(row.names(colData(ddsHTSeq)),paste(condition, temp, sep="_"),sep=":"))
     ddsHTSeq.counts = counts(ddsHTSeq,normalized=TRUE)
     coldat = colData(ddsHTSeq)
     colnames(ddsHTSeq.counts) = paste(row.names(coldat),paste(coldat$condition, coldat$temp, sep="_"),sep=":")
 
-    fileend=paste(fdrcutoff*100,"fdr_counts.csv",sep="")
+    # fileend=paste(fdrcutoff*100,"fdr_counts.csv",sep="")
+    fileend=paste(fdrcutoff*100,"fdr_", fccutoff,"fc_counts.csv",sep="")
+
     write.csv(ddsHTSeq.counts,file=file.path(outdir,"cna1_crz1_allcounts.csv"))
     write.csv(ddsHTSeq.counts[intersect(KOcna1Genes,KOcrz1Genes),],
               file=file.path(outdir,paste("cna1ko_crz1ko_intersect",fileend,sep="_")))
@@ -122,7 +179,7 @@ ExportNormedCounts = function(KOcna1Genes,KOcrz1Genes,ddsHTSeq,fdrcutoff,outdir)
               file=file.path(outdir,paste("crz1ko_unique",fileend,sep="_")))
 }
 ##------- Annotate Gene Lists ------
-AnnotateGeneLists = function(KOcna1Genes,KOcrz1Genes,fdrcutoff,annotdir, outdir){
+AnnotateGeneLists = function(KOcna1Genes,KOcrz1Genes,fdrcutoff,fccutoff,annotdir, outdir){
     ##------------ Load Annotation --------
     # annotdir = file.path(Sys.getenv("BREM"),"cneo_hybrid_rnaseq/info")
     
@@ -137,7 +194,9 @@ AnnotateGeneLists = function(KOcna1Genes,KOcrz1Genes,fdrcutoff,annotdir, outdir)
     annot.df$ID = NULL
     ##------------ Extract Genes of Interest --------
 
-    fileend=paste(fdrcutoff*100,"fdr_annot.csv",sep="")
+    # fileend=paste(fdrcutoff*100,"fdr_annot.csv",sep="")
+    fileend=paste(fdrcutoff*100,"fdr_", fccutoff,"fc_annot.csv",sep="")
+
     write.csv(annot.df[intersect(KOcna1Genes,KOcrz1Genes),],
               file=file.path(outdir,paste("cna1ko_crz1ko_intersect",fileend,sep="_")))
     write.csv(annot.df[setdiff(KOcna1Genes,KOcrz1Genes),],
@@ -156,16 +215,41 @@ AnnotateGeneLists = function(KOcna1Genes,KOcrz1Genes,fdrcutoff,annotdir, outdir)
 ## mapply(FUN=get.genes.counts,resultsNames(ddsHTSeq),MoreArgs = list(dds=ddsHTSeq,fdr=0.05))
 ##===========================================================================
 ##===========================================================================
+Crz1OverexpressHeatmap(ddsHTSeq,outdir)
+
 # fdrcutoff = 0.05
 # fdrcutoff = 0.2
-for (fdrcutoff in c(0.2, 0.05)){
-    fdg = FindDiffGenes(fdrcutoff, ddsHTSeq, outdir)
+# fdrlist = c(0.2, 0.05)
+# curfc = 0.01
+curfc = 2
+fdrlist = c(0.05)
+
+for (curfdr in fdrlist){
+    fdg = FindDiffGenes(ddsHTSeq, outdir,fdrcutoff=curfdr,fccutoff=curfc)
     KOcna1Genes = fdg$KOcna1Genes
     KOcrz1Genes = fdg$KOcrz1Genes
-    ExportNormedCounts(KOcna1Genes,KOcrz1Genes,ddsHTSeq,fdrcutoff,outdir)
-    AnnotateGeneLists(KOcna1Genes,KOcrz1Genes,fdrcutoff,annotdir,outdir)
+    ExportNormedCounts(KOcna1Genes,KOcrz1Genes,ddsHTSeq,curfdr,curfc,outdir)
+    AnnotateGeneLists(KOcna1Genes,KOcrz1Genes,curfdr,curfc,annotdir,outdir)
+
+    cna1ko.crz1ko.intersect.genes = intersect(KOcna1Genes,KOcrz1Genes)
+    cna1ko.unique.genes = setdiff(KOcna1Genes,KOcrz1Genes)
+    crz1ko.unique = setdiff(KOcrz1Genes,KOcna1Genes)
+
+    fileend=paste(curfdr*100,"fdr_", curfc,"fc.csv",sep="")
+    GenesOfInterestHeatmap(c(cna1ko.unique.genes,cna1ko.crz1ko.intersect.genes,crz1ko.unique),
+                           ddsHTSeq, 
+                           outfile= file.path(outdir,paste("goi_heatmap_", fileend,sep="")))
+    GenesOfInterestHeatmap(cna1ko.unique.genes,
+                           ddsHTSeq, 
+                           outfile= file.path(outdir,paste("cna1ko_unique_heatmap_", fileend,sep="")))
+    GenesOfInterestHeatmap(cna1ko.crz1ko.intersect.genes,
+                           ddsHTSeq, 
+                           outfile= file.path(outdir,paste("cna1ko_crz1ko_intersect_heatmap_", fileend,sep="")))
+    GenesOfInterestHeatmap(crz1ko.unique,
+                           ddsHTSeq, 
+                           outfile= file.path(outdir,paste("crz1ko_unique_heatmap_", fileend,sep="")))
+
 }
-Crz1OverexpressHeatmap(ddsHTSeq,outdir)
 ## Do following last because it ??alters esitmates??
 SampleSampleDistHeatmap(ddsHTSeq,outdir)
 ##===========================================================================
@@ -182,3 +266,4 @@ SampleSampleDistHeatmap(ddsHTSeq,outdir)
 
 # KO_cna1_24C <->  KO_cna1_37C
 # KO_crz1_24C <->  KO_crz1_37C
+stop("Set up filtering")

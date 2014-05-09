@@ -18,3 +18,14 @@ wget --no-parent --no-host-directories --no-directories -P /nfs/gems_sata/heitma
    - [[http://meme.nbcr.net/meme/doc/ame.html][AME (Analysis of Motif Enrichment)]]
    - [[http://meme.nbcr.net/meme/doc/meme-format.html][MEME Suite Motif File Formats]]
    - [[http://meme.nbcr.net/meme/examples/sample-dna-motif.meme-io][MEME Sample File]]
+* TODO Tasks from Meeting [2014-02-27 Thu]
+** DONE Generate heatmap with genes of interest
+** TODO Use 2 FC cutoff
+** TODO genes that are upregulated in both KOs from gene downregulated in both KOs
+** TODO Look to see if S. cerevisiae cna1_ko genes are differentially expression in C. neoformans
+** DONE Send to Blake
+   - [X] promoter script
+   - [X] counts for all samples
+** TODO [#C] Use S. cerevisiae CRZ1 PWM to search C. neoformans promoters
+** TODO [#C] Use KI_CRZ1 to explore effects of overexpression
+** TODO count based filtering
