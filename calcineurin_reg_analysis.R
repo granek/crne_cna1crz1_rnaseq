@@ -68,7 +68,7 @@ resultsNames(ddsHTSeq)[3:6]
 
 
 
-FindDiffGenes = function(ddsHTSeq,outdir, fdrcutoff=0.05, fccutoff=2){
+FindDiffGenes = function(ddsHTSeq,outdir, fdrcutoff=0.05, fccutoff=2,countfilter=FALSE){
     ## stop("need to do filtering for each comparison????")
     log2fc = log2(fccutoff)
     # for(var in seq) expr
@@ -78,18 +78,38 @@ FindDiffGenes = function(ddsHTSeq,outdir, fdrcutoff=0.05, fccutoff=2){
         ## print(coeff)
         cur.res = results(ddsHTSeq,coeff)
         cur.res = cur.res[order(cur.res$padj),]
-        ## write.csv(cur.res,file=file.path(outdir,paste(coeff, "results",sep="__")))
         ## print(sample)
         print(
             table(cur.res$padj < fdrcutoff,
                   abs(cur.res$log2FoldChange) >= log2fc,
                   dnn=c(paste("FDR<",fdrcutoff), paste("FC>",fccutoff)))
             )
-        ListOfGeneVecs[[sample]] = row.names(cur.res[which((cur.res$padj < fdrcutoff) &
-                          (abs(cur.res$log2FoldChange) >= log2fc)),])
+        if (countfilter) {
+            print("Filtering Genes with mean counts less than 10 or NA pvalue")
+            use <- cur.res$baseMean >= 10 & !is.na(cur.res$pvalue)
+            table(use)
+            resFilt <- cur.res[use,]
+            resFilt$padj <- p.adjust(resFilt$pvalue, method="BH")
+            sum(cur.res$padj < .1, na.rm=TRUE)
+            sum(resFilt$padj < .1, na.rm=TRUE)
+            cur.res = resFilt
+            print(
+                table(cur.res$padj < fdrcutoff,
+                      abs(cur.res$log2FoldChange) >= log2fc,
+                      dnn=c(paste("FDR<",fdrcutoff), paste("FC>",fccutoff)))
+            )
+
+            filtered="_filt"
+        } else {
+            filtered=""
+        }
+        fileend=paste(fdrcutoff*100,"fdr_", fccutoff,"fc",filtered,".csv",sep="")
+        filt.res = cur.res[which((cur.res$padj < fdrcutoff) &
+                          (abs(cur.res$log2FoldChange) >= log2fc)),]
+        write.csv(as.data.frame(filt.res),file=file.path(outdir,paste(coeff, "results",fileend,sep="_")))
+        ListOfGeneVecs[[sample]] = row.names(filt.res)
     }
 
-    fileend=paste(fdrcutoff*100,"fdr_", fccutoff,"fc.csv",sep="")
     KOcna1Genes = ListOfGeneVecs[["KO_cna1"]]
     KOcrz1Genes = ListOfGeneVecs[["KO_crz1"]]
     write.csv(KOcna1Genes,file=file.path(outdir,paste("cna1ko_genes",fileend,sep="_")))
@@ -164,7 +184,7 @@ SampleSampleDistHeatmap = function(ddsHTSeq,outdir){
 }
 
 ##------- Normalized Counts Table ------
-ExportNormedCounts = function(KOcna1Genes,KOcrz1Genes,ddsHTSeq,fdrcutoff,fccutoff,outdir){
+ExportNormedCounts = function(KOcna1Genes,KOcrz1Genes,ddsHTSeq,fileend,outdir){
     ## head(counts(ddsHTSeq,normalized=TRUE))
     ## with(colData(ddsHTSeq),paste(row.names(colData(ddsHTSeq)),paste(condition, temp, sep="_"),sep=":"))
     ddsHTSeq.counts = counts(ddsHTSeq,normalized=TRUE)
@@ -172,7 +192,9 @@ ExportNormedCounts = function(KOcna1Genes,KOcrz1Genes,ddsHTSeq,fdrcutoff,fccutof
     colnames(ddsHTSeq.counts) = paste(row.names(coldat),paste(coldat$condition, coldat$temp, sep="_"),sep=":")
 
     # fileend=paste(fdrcutoff*100,"fdr_counts.csv",sep="")
-    fileend=paste(fdrcutoff*100,"fdr_", fccutoff,"fc_counts.csv",sep="")
+    # fileend=paste(fdrcutoff*100,"fdr_", fccutoff,"fc_counts.csv",sep="")
+    fileend=paste(fileend,"_counts.csv",sep="")
+
 
     write.csv(ddsHTSeq.counts,file=file.path(outdir,"cna1_crz1_allcounts.csv"))
     write.csv(ddsHTSeq.counts[intersect(KOcna1Genes,KOcrz1Genes),],
@@ -201,7 +223,7 @@ ExportNormedCounts = function(KOcna1Genes,KOcrz1Genes,ddsHTSeq,fdrcutoff,fccutof
 ## }
 ## HERE <<<<<<
 ##------- Annotate Gene Lists ------
-AnnotateGeneLists = function(KOcna1Genes,KOcrz1Genes,fdrcutoff,fccutoff,annotdir, outdir){
+AnnotateGeneLists = function(KOcna1Genes,KOcrz1Genes,fileend,annotdir, outdir){
     ##------------ Load Annotation --------
     # annotdir = file.path(Sys.getenv("BREM"),"cneo_hybrid_rnaseq/info")
     
@@ -217,7 +239,8 @@ AnnotateGeneLists = function(KOcna1Genes,KOcrz1Genes,fdrcutoff,fccutoff,annotdir
     ##------------ Extract Genes of Interest --------
 
     # fileend=paste(fdrcutoff*100,"fdr_annot.csv",sep="")
-    fileend=paste(fdrcutoff*100,"fdr_", fccutoff,"fc_annot.csv",sep="")
+    # fileend=paste(fdrcutoff*100,"fdr_", fccutoff,"fc_annot.csv",sep="")
+    fileend=paste(fileend,"_annot.csv",sep="")
 
     write.csv(annot.df[intersect(KOcna1Genes,KOcrz1Genes),],
               file=file.path(outdir,paste("cna1ko_crz1ko_intersect",fileend,sep="_")))
@@ -245,19 +268,28 @@ Crz1OverexpressHeatmap(ddsHTSeq,outdir)
 # curfc = 0.01
 curfc = 0 ##HERE
 fdrlist = c(0.05)
+countfilter = FALSE
 
 for (curfdr in fdrlist){
+    if (countfilter) {
+        filtered="_filt"
+    } else {
+        filtered=""
+    }
+    ## fileend=paste(curfdr*100,"fdr_", curfc,"fc",filtered,".csv",sep="")
+    fileend=paste(curfdr*100,"fdr_", curfc,"fc",filtered,sep="")
+    
     fdg = FindDiffGenes(ddsHTSeq, outdir,fdrcutoff=curfdr,fccutoff=curfc)
     KOcna1Genes = fdg[["KO_cna1"]] ## fdg$KOcna1Genes
     KOcrz1Genes = fdg[["KO_crz1"]] ## fdg$KOcrz1Genes
-    ExportNormedCounts(KOcna1Genes,KOcrz1Genes,ddsHTSeq,curfdr,curfc,outdir)
-    AnnotateGeneLists(KOcna1Genes,KOcrz1Genes,curfdr,curfc,annotdir,outdir)
+    ExportNormedCounts(KOcna1Genes,KOcrz1Genes,ddsHTSeq,fileend,outdir)
+    AnnotateGeneLists(KOcna1Genes,KOcrz1Genes,fileend,annotdir,outdir)
     ## ExportResults(KOcna1Genes,KOcrz1Genes,ddsHTSeq,curfdr,curfc,outdir) ##HERE
     cna1ko.crz1ko.intersect.genes = intersect(KOcna1Genes,KOcrz1Genes)
     cna1ko.unique.genes = setdiff(KOcna1Genes,KOcrz1Genes)
     crz1ko.unique = setdiff(KOcrz1Genes,KOcna1Genes)
 
-    fileend=paste(curfdr*100,"fdr_", curfc,"fc.csv",sep="")
+    ## fileend=paste(curfdr*100,"fdr_", curfc,"fc.csv",sep="")
     GenesOfInterestHeatmap(c(cna1ko.unique.genes,cna1ko.crz1ko.intersect.genes,crz1ko.unique),
                            ddsHTSeq, 
                            outfile= file.path(outdir,paste("goi_heatmap_", fileend,sep="")))
