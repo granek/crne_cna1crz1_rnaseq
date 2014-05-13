@@ -39,6 +39,7 @@ res <- results(ddsHTSeq)
 
 ##===========================================================================
 ##===========================================================================
+## HERE >>>>>>>
 ## stop("Set up filtering")
 ## if ("--nofilter" %in% args) {
 ##     print("Not Filtering")
@@ -56,7 +57,7 @@ res <- results(ddsHTSeq)
 ##     ## antisense.counts.filt = antisense.counts[antisense.use,]
 ## }
 ## 
-
+## HERE <<<<<<
 ##===========================================================================
 ##===========================================================================
 
@@ -70,17 +71,15 @@ resultsNames(ddsHTSeq)[3:6]
 FindDiffGenes = function(ddsHTSeq,outdir, fdrcutoff=0.05, fccutoff=2){
     ## stop("need to do filtering for each comparison????")
     log2fc = log2(fccutoff)
-    ##============================================================
-    ##============================================================
     # for(var in seq) expr
     ListOfGeneVecs = list()
     for(sample in c("KI_CNA1","KI_CRZ1","KO_cna1","KO_crz1")) {
-        ## reslist[[sample]] =
         coeff = paste("condition",sample, "vs_WT",sep="_")
-        print(coeff)
+        ## print(coeff)
         cur.res = results(ddsHTSeq,coeff)
         cur.res = cur.res[order(cur.res$padj),]
-        print(sample)
+        ## write.csv(cur.res,file=file.path(outdir,paste(coeff, "results",sep="__")))
+        ## print(sample)
         print(
             table(cur.res$padj < fdrcutoff,
                   abs(cur.res$log2FoldChange) >= log2fc,
@@ -89,53 +88,6 @@ FindDiffGenes = function(ddsHTSeq,outdir, fdrcutoff=0.05, fccutoff=2){
         ListOfGeneVecs[[sample]] = row.names(cur.res[which((cur.res$padj < fdrcutoff) &
                           (abs(cur.res$log2FoldChange) >= log2fc)),])
     }
-    ##============================================================
-    ##============================================================
-    ## ##-------
-    ## KICNA1.res = results(ddsHTSeq,"condition_KI_CNA1_vs_WT")
-    ## KICNA1.res = KICNA1.res[order(KICNA1.res$padj),]
-    ## print("KICNA1")
-    ## print(
-    ##     table(KICNA1.res$padj < fdrcutoff,
-    ##           abs(KICNA1.res$log2FoldChange) >= log2fc,
-    ##           dnn=c(paste("FDR<",fdrcutoff), paste("FC>",fccutoff)))
-    ##     )
-    ## ##-------
-    ## KICRZ1.res = results(ddsHTSeq,"condition_KI_CRZ1_vs_WT")
-    ## KICRZ1.res = KICRZ1.res[order(KICRZ1.res$padj),]
-    ## print("KICRZ1")
-    ## print(
-    ##     table(KICRZ1.res$padj < fdrcutoff,
-    ##           abs(KICRZ1.res$log2FoldChange) >= log2fc,
-    ##           dnn=c(paste("FDR<",fdrcutoff), paste("FC>",fccutoff)))
-    ##     )
-    ## ##-------
-    ## KOcna1.res = results(ddsHTSeq,"condition_KO_cna1_vs_WT")
-    ## KOcna1.res = KOcna1.res[order(KOcna1.res$padj),]
-    ## print("KOcna1")
-    ## print(
-    ##     table(KOcna1.res$padj < fdrcutoff,
-    ##           abs(KOcna1.res$log2FoldChange) >= log2fc,
-    ##           dnn=c(paste("FDR<",fdrcutoff), paste("FC>",fccutoff)))
-    ##     )
-    ## KOcna1Genes = row.names(KOcna1.res[which((KOcna1.res$padj < fdrcutoff) &
-    ##     (abs(KOcna1.res$log2FoldChange) >= log2fc)),])
-    ## ##-------
-    ## KOcrz1.res = results(ddsHTSeq,"condition_KO_crz1_vs_WT")
-    ## KOcrz1.res = KOcrz1.res[order(KOcrz1.res$padj),]
-    ## print("KOcrz1")
-    ## print(
-    ##     table(KOcrz1.res$padj < fdrcutoff,
-    ##           abs(KOcrz1.res$log2FoldChange) >= log2fc,
-    ##           dnn=c(paste("FDR<",fdrcutoff), paste("FC>",fccutoff)))
-    ##     )
-    ## KOcrz1Genes = row.names(KOcrz1.res[which((KOcrz1.res$padj < fdrcutoff) &
-    ##     (abs(KOcrz1.res$log2FoldChange) >= log2fc)),])
-    ##-------
-    ## length(row.names(KOcna1.res))
-    ## length(intersect(KOcna1Genes,KOcrz1Genes))
-    ## length(setdiff(KOcna1Genes,KOcrz1Genes))
-    ## length(setdiff(KOcrz1Genes,KOcna1Genes))
 
     fileend=paste(fdrcutoff*100,"fdr_", fccutoff,"fc.csv",sep="")
     KOcna1Genes = ListOfGeneVecs[["KO_cna1"]]
@@ -231,6 +183,7 @@ ExportNormedCounts = function(KOcna1Genes,KOcrz1Genes,ddsHTSeq,fdrcutoff,fccutof
               file=file.path(outdir,paste("crz1ko_unique",fileend,sep="_")))
 }
 ##------- Results Table ------
+## HERE >>>>>>
 ## ExportResults = function(KOcna1Genes,KOcrz1Genes,ddsHTSeq,fdrcutoff,fccutoff,outdir){
 ##     coldat = colData(ddsHTSeq)
 ##     colnames(ddsHTSeq.counts) = paste(row.names(coldat),paste(coldat$condition, coldat$temp, sep="_"),sep=":")
@@ -246,6 +199,7 @@ ExportNormedCounts = function(KOcna1Genes,KOcrz1Genes,ddsHTSeq,fdrcutoff,fccutof
 ##     write.csv(ddsHTSeq.counts[setdiff(KOcrz1Genes,KOcna1Genes),],
 ##               file=file.path(outdir,paste("crz1ko_unique",fileend,sep="_")))
 ## }
+## HERE <<<<<<
 ##------- Annotate Gene Lists ------
 AnnotateGeneLists = function(KOcna1Genes,KOcrz1Genes,fdrcutoff,fccutoff,annotdir, outdir){
     ##------------ Load Annotation --------
@@ -289,7 +243,7 @@ Crz1OverexpressHeatmap(ddsHTSeq,outdir)
 # fdrcutoff = 0.2
 # fdrlist = c(0.2, 0.05)
 # curfc = 0.01
-curfc = 0
+curfc = 0 ##HERE
 fdrlist = c(0.05)
 
 for (curfdr in fdrlist){
@@ -298,7 +252,7 @@ for (curfdr in fdrlist){
     KOcrz1Genes = fdg[["KO_crz1"]] ## fdg$KOcrz1Genes
     ExportNormedCounts(KOcna1Genes,KOcrz1Genes,ddsHTSeq,curfdr,curfc,outdir)
     AnnotateGeneLists(KOcna1Genes,KOcrz1Genes,curfdr,curfc,annotdir,outdir)
-    ## ExportResults(KOcna1Genes,KOcrz1Genes,ddsHTSeq,curfdr,curfc,outdir)
+    ## ExportResults(KOcna1Genes,KOcrz1Genes,ddsHTSeq,curfdr,curfc,outdir) ##HERE
     cna1ko.crz1ko.intersect.genes = intersect(KOcna1Genes,KOcrz1Genes)
     cna1ko.unique.genes = setdiff(KOcna1Genes,KOcrz1Genes)
     crz1ko.unique = setdiff(KOcrz1Genes,KOcna1Genes)
