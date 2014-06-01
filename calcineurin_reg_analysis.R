@@ -20,7 +20,6 @@ dir.create(outdir)
 
 counttab.file=file.path(basedir,"info","calcineurin_sample_table.csv")
 # sampleComparePlots = file.path(outdir,"sample_compare_plots.pdf")
-sampleCompareHeatmap = file.path(outdir,"sample_compare_heatmap.pdf")
 sampleComparePCA = file.path(outdir,"sample_compare_pca.pdf")
 
 sampleData = read.csv(counttab.file,colClasses=c("character","numeric","character","factor","factor"))
@@ -121,19 +120,25 @@ FindDiffGenes = function(ddsHTSeq,outdir, fdrcutoff=0.05, fccutoff=2,countfilter
     return(ListOfGeneVecs)
 }
 ##------- CRZ1 overexpression ------
-Crz1OverexpressHeatmap = function(ddsHTSeq,outdir){
+Crz1OverexpressHeatmap = function(ddsHTSeq,outdir,clustmethod="average"){
     cna1.id="CNAG_04796"
     crz1.id="CNAG_00156"
     crz1mat = counts(ddsHTSeq,normalized=TRUE)[c(cna1.id,crz1.id),]
     colnames(crz1mat) = with(colData(ddsHTSeq),paste(condition, temp, sep=" : "))
     hmcol <- colorRampPalette(brewer.pal(9, "GnBu"))(100)
     pdf(file.path(outdir,"crz1_overexpress.pdf"))
-    heatmap.2(t(crz1mat), trace="none", col = rev(hmcol), margin=c(7, 7),cexCol=1)
+    heatmap.2(t(crz1mat), trace="none", col = rev(hmcol), margin=c(7, 7),cexCol=1,
+              hclustfun=function(d,members=NULL){hclust(d,method=clustmethod,members)})
     dev.off()
 }
 
 ##------- GenesOfInterestHeatmap ------
-GenesOfInterestHeatmap = function(genes.of.interest,ddsHTSeq,outfile){
+GenesOfInterestHeatmap = function(genes.of.interest,ddsHTSeq,outfile,clustmethod="average"){
+    print(paste("NUMBER OF genes.of.interest:",length(genes.of.interest)))
+    if (length(genes.of.interest) == 0){
+        warning("Refusing to make a heatmap with ZERO genes.of.interest")
+        return(FALSE)
+    }
     hmcol <- colorRampPalette(brewer.pal(9, "GnBu"))(100)
     # pdf(outfile)
     ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -141,7 +146,8 @@ GenesOfInterestHeatmap = function(genes.of.interest,ddsHTSeq,outfile){
     png(paste(outfile,"_raw.png",sep=""),width = 8, height = 10, units = "in", res = 300)
     goimat = counts(ddsHTSeq,normalized=TRUE)[genes.of.interest,]
     colnames(goimat) = with(colData(ddsHTSeq),paste(condition, temp, sep=" : "))
-    heatmap.2(goimat, trace="none", col = rev(hmcol), margin=c(7, 7),cexCol=1)
+    heatmap.2(goimat, trace="none", col = rev(hmcol), margin=c(7, 7),cexRow=1,cexCol=1,
+              hclustfun=function(d,members=NULL){hclust(d,method=clustmethod,members)})
     dev.off()
     ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ## Regularized log transformation
@@ -149,7 +155,8 @@ GenesOfInterestHeatmap = function(genes.of.interest,ddsHTSeq,outfile){
     rld <- rlogTransformation(ddsHTSeq, blind=FALSE)
     goimat = assay(rld)[genes.of.interest,]
     colnames(goimat) = with(colData(rld),paste(condition, temp, sep=" : "))
-    heatmap.2(goimat, trace="none", col = rev(hmcol), margin=c(7, 7),cexCol=1)
+    heatmap.2(goimat, trace="none", col = rev(hmcol), margin=c(7, 7),cexRow=1,cexCol=1,
+              hclustfun=function(d,members=NULL){hclust(d,method=clustmethod,members)})
     dev.off()
     ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ## Regularized log transformation
@@ -159,11 +166,13 @@ GenesOfInterestHeatmap = function(genes.of.interest,ddsHTSeq,outfile){
     vsd <- varianceStabilizingTransformation(ddsHTSeq, blind=FALSE)
     goimat = assay(vsd)[genes.of.interest,]
     colnames(goimat) = with(colData(vsd),paste(condition, temp, sep=" : "))
-    heatmap.2(goimat, trace="none", col = rev(hmcol), margin=c(7, 7),cexCol=1)
+    heatmap.2(goimat, trace="none", col = rev(hmcol), margin=c(7, 7),cexRow=1,cexCol=1,
+              hclustfun=function(d,members=NULL){hclust(d,method=clustmethod,members)})
+
     dev.off()
 }
 ##----- Heatmap of the sample-to-sample distances------
-SampleSampleDistHeatmap = function(ddsHTSeq,outdir){
+SampleSampleDistHeatmap = function(ddsHTSeq,outdir,clustmethod="average"){
     ## select <- order(rowMeans(counts(dds,normalized=TRUE)),decreasing=TRUE)[1:30] 
     hmcol <- colorRampPalette(brewer.pal(9, "GnBu"))(100)
 
@@ -173,8 +182,11 @@ SampleSampleDistHeatmap = function(ddsHTSeq,outdir){
     mat <- as.matrix(distsRL)
     rownames(mat) <- colnames(mat) <- with(colData(ddsHTSeq),
                                            paste(condition, temp, sep=" : "))
+    sampleCompareHeatmap = file.path(outdir,paste("sample_compare_heatmap_",clustmethod,".pdf",sep="_"))
     pdf(sampleCompareHeatmap)
-    heatmap.2(mat, trace="none", col = rev(hmcol), margin=c(7, 7))
+    heatmap.2(mat, trace="none", col = rev(hmcol), margin=c(7, 7),
+              hclustfun=function(d,members=NULL){hclust(d,method=clustmethod,members)})
+
     dev.off()
     
     pdf(sampleComparePCA)
@@ -266,47 +278,54 @@ Crz1OverexpressHeatmap(ddsHTSeq,outdir)
 # fdrcutoff = 0.2
 # fdrlist = c(0.2, 0.05)
 # curfc = 0.01
-curfc = 0 ##HERE
-fdrlist = c(0.05)
-countfilter = FALSE
+# curfc = 0 ##HERE
+## fclist = c(2,0)
+## fdrlist = c(0.2, 0.05)
+## filtlist = c(TRUE,FALSE)
+fclist = c(2)
+fdrlist = c(0.2)
+filtlist = c(TRUE)
+for (curfc in fclist) {
+    for (countfilter in filtlist){
+        for (curfdr in fdrlist){
+            if (countfilter) {
+                filtered="_filt"
+            } else {
+                filtered=""
+            }
+            ## fileend=paste(curfdr*100,"fdr_", curfc,"fc",filtered,".csv",sep="")
+            fileend=paste(curfdr*100,"fdr_", curfc,"fc",filtered,sep="")
+            
+            fdg = FindDiffGenes(ddsHTSeq, outdir,fdrcutoff=curfdr,fccutoff=curfc,countfilter=countfilter)
+            KOcna1Genes = fdg[["KO_cna1"]] ## fdg$KOcna1Genes
+            KOcrz1Genes = fdg[["KO_crz1"]] ## fdg$KOcrz1Genes
+            ExportNormedCounts(KOcna1Genes,KOcrz1Genes,ddsHTSeq,fileend,outdir)
+            AnnotateGeneLists(KOcna1Genes,KOcrz1Genes,fileend,annotdir,outdir)
+            ## ExportResults(KOcna1Genes,KOcrz1Genes,ddsHTSeq,curfdr,curfc,outdir) ##HERE
+            cna1ko.crz1ko.intersect.genes = intersect(KOcna1Genes,KOcrz1Genes)
+            cna1ko.unique.genes = setdiff(KOcna1Genes,KOcrz1Genes)
+            crz1ko.unique = setdiff(KOcrz1Genes,KOcna1Genes)
 
-for (curfdr in fdrlist){
-    if (countfilter) {
-        filtered="_filt"
-    } else {
-        filtered=""
-    }
-    ## fileend=paste(curfdr*100,"fdr_", curfc,"fc",filtered,".csv",sep="")
-    fileend=paste(curfdr*100,"fdr_", curfc,"fc",filtered,sep="")
-    
-    fdg = FindDiffGenes(ddsHTSeq, outdir,fdrcutoff=curfdr,fccutoff=curfc)
-    KOcna1Genes = fdg[["KO_cna1"]] ## fdg$KOcna1Genes
-    KOcrz1Genes = fdg[["KO_crz1"]] ## fdg$KOcrz1Genes
-    ExportNormedCounts(KOcna1Genes,KOcrz1Genes,ddsHTSeq,fileend,outdir)
-    AnnotateGeneLists(KOcna1Genes,KOcrz1Genes,fileend,annotdir,outdir)
-    ## ExportResults(KOcna1Genes,KOcrz1Genes,ddsHTSeq,curfdr,curfc,outdir) ##HERE
-    cna1ko.crz1ko.intersect.genes = intersect(KOcna1Genes,KOcrz1Genes)
-    cna1ko.unique.genes = setdiff(KOcna1Genes,KOcrz1Genes)
-    crz1ko.unique = setdiff(KOcrz1Genes,KOcna1Genes)
-
-    ## fileend=paste(curfdr*100,"fdr_", curfc,"fc.csv",sep="")
-    GenesOfInterestHeatmap(c(cna1ko.unique.genes,cna1ko.crz1ko.intersect.genes,crz1ko.unique),
-                           ddsHTSeq, 
-                           outfile= file.path(outdir,paste("goi_heatmap_", fileend,sep="")))
-    GenesOfInterestHeatmap(cna1ko.unique.genes,
-                           ddsHTSeq, 
-                           outfile= file.path(outdir,paste("cna1ko_unique_heatmap_", fileend,sep="")))
-    GenesOfInterestHeatmap(cna1ko.crz1ko.intersect.genes,
-                           ddsHTSeq, 
-                           outfile= file.path(outdir,paste("cna1ko_crz1ko_intersect_heatmap_", fileend,sep="")))
-    GenesOfInterestHeatmap(crz1ko.unique,
-                           ddsHTSeq, 
-                           outfile= file.path(outdir,paste("crz1ko_unique_heatmap_", fileend,sep="")))
-
+            ## fileend=paste(curfdr*100,"fdr_", curfc,"fc.csv",sep="")
+            GenesOfInterestHeatmap(c(cna1ko.unique.genes,cna1ko.crz1ko.intersect.genes,crz1ko.unique),
+                                   ddsHTSeq, 
+                                   outfile= file.path(outdir,paste("goi_heatmap_", fileend,sep="")))
+            GenesOfInterestHeatmap(cna1ko.unique.genes,
+                                   ddsHTSeq, 
+                                   outfile= file.path(outdir,paste("cna1ko_unique_heatmap_", fileend,sep="")))
+            GenesOfInterestHeatmap(cna1ko.crz1ko.intersect.genes,
+                                   ddsHTSeq, 
+                                   outfile= file.path(outdir,paste("cna1ko_crz1ko_intersect_heatmap_", fileend,sep="")))
+            GenesOfInterestHeatmap(crz1ko.unique,
+                                   ddsHTSeq, 
+                                   outfile= file.path(outdir,paste("crz1ko_unique_heatmap_", fileend,sep="")))
+        }
+    }   
 }
 ## Do following last because it ??alters esitmates??
-SampleSampleDistHeatmap(ddsHTSeq,outdir)
-
+for (clust in c("ward", "single", "complete", "average", "mcquitty", "median", "centroid")) {
+    SampleSampleDistHeatmap(ddsHTSeq,outdir,clustmethod="average")
+}
 ##------- Individual Comparisons ------
 # WT_24C <-> KO_crz1_24C
 # WT_24C <-> KO_cna1_24C
@@ -320,3 +339,14 @@ SampleSampleDistHeatmap(ddsHTSeq,outdir)
 # KO_crz1_24C <->  KO_crz1_37C
 stop("need to do filtering for each comparison???? -> see FindDiffGenes")
 stop("Output results tables in FindDiffGenes?")
+## stop("Use different clustering method")
+
+
+test = function(x){
+    if (x) {
+        warning("blah1")
+        return("now")
+    }
+    print("NOT x")
+    warning("blah2")
+}
