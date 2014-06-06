@@ -11,18 +11,18 @@ if ("--usecwd" %in% args) {
     basedir<<-"."
 } else {
     ## outdir<<-file.path(basedir,"results")
-    basedir<<-Sys.getenv("CNA")
+    basedir<<-file.path(Sys.getenv("CNA"),"rstudio")
 }
 outdir=file.path(basedir,"results")
 annotdir = file.path(basedir,"info")
 countdir=file.path(basedir,"counts")
 dir.create(outdir)
 
-counttab.file=file.path(basedir,"info","calcineurin_sample_table.csv")
+# counttab.file=file.path(basedir,"info","calcineurin_sample_table.csv")
+counttab.file=file.path(basedir,"info","calcineurin_sample_table_drop_bad_cnako.csv")
 # sampleComparePlots = file.path(outdir,"sample_compare_plots.pdf")
-sampleComparePCA = file.path(outdir,"sample_compare_pca.pdf")
 
-sampleData = read.csv(counttab.file,colClasses=c("character","numeric","character","factor","factor"))
+sampleData = read.csv(counttab.file,comment.char="#", colClasses=c("character","numeric","character","factor","factor"))
 sampleData$genotype = factor(sampleData$genotype, levels=c("WT", "KI_CNA1", "KI_CRZ1", "KO_cna1", "KO_crz1"))
 sampleTable = transform(sampleData, sampleName=sample_name,fileName=sample_file,condition=genotype)
 rownames(sampleTable) = sampleTable$sample_num
@@ -124,9 +124,12 @@ Crz1OverexpressHeatmap = function(ddsHTSeq,outdir,clustmethod="average"){
     cna1.id="CNAG_04796"
     crz1.id="CNAG_00156"
     crz1mat = counts(ddsHTSeq,normalized=TRUE)[c(cna1.id,crz1.id),]
-    colnames(crz1mat) = with(colData(ddsHTSeq),paste(condition, temp, sep=" : "))
+    cols = colData(ddsHTSeq)
+    ## colnames(crz1mat) = with(colData(ddsHTSeq),paste(condition, temp, sep=" : "))
+    colnames(crz1mat) = paste(cols$condition, cols$temp, substr(rownames(cols),6,7), sep=" : ")
     hmcol <- colorRampPalette(brewer.pal(9, "GnBu"))(100)
-    pdf(file.path(outdir,"crz1_overexpress.pdf"))
+    ## pdf(file.path(outdir,"crz1_overexpress.pdf"))
+    png(file.path(outdir,"crz1_overexpress.png"),width = 8, height = 10, units = "in", res = 300)
     heatmap.2(t(crz1mat), trace="none", col = rev(hmcol), margin=c(7, 7),cexCol=1,
               hclustfun=function(d,members=NULL){hclust(d,method=clustmethod,members)})
     dev.off()
@@ -176,20 +179,36 @@ SampleSampleDistHeatmap = function(ddsHTSeq,outdir,clustmethod="average"){
     ## select <- order(rowMeans(counts(dds,normalized=TRUE)),decreasing=TRUE)[1:30] 
     hmcol <- colorRampPalette(brewer.pal(9, "GnBu"))(100)
 
+
+    ## samplecols = c("black","blue", "lightblue", "green","lightgreen") #brewer.pal(5, "Paired")
+    samplecols = brewer.pal(5, "Paired")
+    names(samplecols) = c("KO_crz1","KI_CRZ1","KO_cna1","KI_CNA1","WT")
+    colorbar = samplecols[as.character(colData(ddsHTSeq)$condition)]
+    print(colorbar)
+    print(samplecols)
+    print(colData(ddsHTSeq)$condition)
     rld <- rlogTransformation(ddsHTSeq, blind=TRUE)
     distsRL <- dist(t(assay(rld)))
     ## A heatmap of this distance matrix gives us an overview over similarities and dissimilarities between samples (Figure 8):
     mat <- as.matrix(distsRL)
-    rownames(mat) <- colnames(mat) <- with(colData(ddsHTSeq),
-                                           paste(condition, temp, sep=" : "))
-    sampleCompareHeatmap = file.path(outdir,paste("sample_compare_heatmap_",clustmethod,".pdf",sep=""))
-    pdf(sampleCompareHeatmap)
+    cols = colData(ddsHTSeq)
+    ## colnames(crz1mat) = with(colData(ddsHTSeq),paste(condition, temp, sep=" : "))
+    rownames(mat) <- colnames(mat) <- paste(cols$condition, cols$temp, substr(rownames(cols),6,7), sep=" : ")
+    ## rownames(mat) <- colnames(mat) <- with(colData(ddsHTSeq),
+    ##                                        paste(condition, temp, sep=" : "))
+    ## sampleCompareHeatmap = file.path(outdir,paste("sample_compare_heatmap_",clustmethod,".pdf",sep=""))
+    sampleCompareHeatmap = file.path(outdir,paste("sample_compare_heatmap_",clustmethod,".png",sep=""))
+    # pdf(sampleCompareHeatmap)
+    png(sampleCompareHeatmap,width = 7, height = 7, units = "in", res = 300)
     heatmap.2(mat, trace="none", col = rev(hmcol), margin=c(7, 7),
+              ColSideColors=colorbar,
               hclustfun=function(d,members=NULL){hclust(d,method=clustmethod,members)})
 
     dev.off()
-    
-    pdf(sampleComparePCA)
+    ## sampleComparePCA = file.path(outdir,"sample_compare_pca.pdf")
+    ## pdf(sampleComparePCA)
+    sampleComparePCA = file.path(outdir,"sample_compare_pca.png")
+    png(sampleComparePCA,width = 8, height = 10, units = "in", res = 300)
     sampleplt = plotPCA(rld, intgroup=c("condition", "temp"))
     print(sampleplt)
     dev.off()
@@ -324,7 +343,7 @@ for (clust in c("ward", "single", "complete", "average", "mcquitty", "median", "
 
 # KO_cna1_24C <->  KO_cna1_37C
 # KO_crz1_24C <->  KO_crz1_37C
-stop("need to do filtering for each comparison???? -> see FindDiffGenes")
+## stop("need to do filtering for each comparison???? -> see FindDiffGenes")
 stop("Output results tables in FindDiffGenes?")
 ## stop("Use different clustering method")
 
