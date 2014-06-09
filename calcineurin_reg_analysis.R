@@ -2,25 +2,29 @@ library("DESeq2")
 library("RColorBrewer")
 library("gplots")
 
-args <- commandArgs(trailingOnly = TRUE)
-print(args)
-
-
-if ("--usecwd" %in% args) {
-    ## outdir<<-file.path(".","results")
-    basedir<<-"."
-} else {
-    ## outdir<<-file.path(basedir,"results")
+##================================================================================
+if (interactive()){
     basedir<<-file.path(Sys.getenv("CNA"),"rstudio")
+} else {
+    basedir<<-"."
 }
+##================================================================================
 outdir=file.path(basedir,"results")
 annotdir = file.path(basedir,"info")
 countdir=file.path(basedir,"counts")
 dir.create(outdir)
+##================================================================================
+suppressPackageStartupMessages(library("optparse"))
 
-# counttab.file=file.path(basedir,"info","calcineurin_sample_table.csv")
-counttab.file=file.path(basedir,"info","calcineurin_sample_table_drop_bad_cnako.csv")
-# sampleComparePlots = file.path(outdir,"sample_compare_plots.pdf")
+option_list <- list( 
+    make_option("--table", default=file.path(basedir,"info","calcineurin_sample_table.csv"), 
+                help = "Sample table file for count data [default: \"%default\"]")
+    )
+opt <- parse_args(OptionParser(option_list=option_list))
+
+# counttab.file=file.path(basedir,"info","calcineurin_sample_table_drop_bad_cnako.csv")
+counttab.file=opt$table
+##================================================================================
 
 sampleData = read.csv(counttab.file,comment.char="#", colClasses=c("character","numeric","character","factor","factor"))
 sampleData$genotype = factor(sampleData$genotype, levels=c("WT", "KI_CNA1", "KI_CRZ1", "KO_cna1", "KO_crz1"))
@@ -344,7 +348,7 @@ for (clust in c("ward", "single", "complete", "average", "mcquitty", "median", "
 # KO_cna1_24C <->  KO_cna1_37C
 # KO_crz1_24C <->  KO_crz1_37C
 ## stop("need to do filtering for each comparison???? -> see FindDiffGenes")
-stop("Output results tables in FindDiffGenes?")
+warning("Output results tables in FindDiffGenes?")
 ## stop("Use different clustering method")
 
 

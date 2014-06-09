@@ -1,9 +1,15 @@
 # make all  -l 16 -j # for parallel make
+# make --load-average 12 --jobs 12
+
+# need bash to allow for process substitution for fastq-mcf: <(gunzip ...)
+# might be able to use bash -c "COMMANDLINE" for that line specifically
+SHELL := /bin/bash
 
 .PHONY: clean test
-# .PRECIOUS:
-.SECONDARY: %.bam
-
+# .PRECIOUS: %.bam
+# .SECONDARY: %.bam
+.PRECIOUS:
+.SECONDARY:
 #--------------------------------------------------
 GENOME_DIR=genome
 INDEXBASE=$(GENOME_DIR)/h99_2
@@ -27,7 +33,8 @@ FINAL_FASTQS := $(addprefix $(FINAL_FASTQ_DIR)/,$(FASTQS))
 #--------------------------------------------------
 TOPHAT_BASE_DIR=thout
 FASTQ_SUFFIX=_R1_001.fastq.gz
-FINAL_BAMS := $(patsubst %$(FASTQ_SUFFIX),$(TOPHAT_BASE_DIR)/%/accepted_hits.bam,$(FASTQS))
+# FINAL_BAMS := $(patsubst %$(FASTQ_SUFFIX),$(TOPHAT_BASE_DIR)/%/accepted_hits.bam,$(FASTQS))
+FINAL_BAMS := $(patsubst %$(FASTQ_SUFFIX),$(TOPHAT_BASE_DIR)/%.bam,$(FASTQS))
 FINAL_BAIS := $(addsuffix .bai,$(FINAL_BAMS))
 #--------------------------------------------------
 #--------------------------------------------------
@@ -36,24 +43,35 @@ READ_COUNTS := $(patsubst %$(FASTQ_SUFFIX),$(COUNT_DIR)/%_counts.tab,$(FASTQS))
 
 INFO_DIR=info
 CNEO_ANNOT=$(INFO_DIR)/Cneo_H99.AHRD.20131001.tab
+
+TMP_DIR=tmp
+FIG_DIR=figures
+
+PILEUP_PLOTS = $(FIG_DIR)/CNAG_00156_pileup.pdf $(FIG_DIR)/CNAG_04796_pileup.pdf
+PILEUP_PLOT_TABLE = $(INFO_DIR)/plot_pileup_table.csv
+
+ILLUMINA_ADAPTERS=$(INFO_DIR)/illumina_adapters.fasta
+ADAPTERS_USED=$(FINAL_FASTQ_DIR)/adapter.fa
+INDICES=$(TMP_DIR)/adapter_indices.txt
+
 #--------------------------------------------------
 dir_guard=@mkdir -p $(@D)
 
-all:  test results todo 
+all:  results todo 
 
-results : $(READ_COUNTS) $(FINAL_BAIS) $(FINAL_BAMS) 
+results : $(READ_COUNTS) $(FINAL_BAIS) $(FINAL_BAMS)
 
 under_development : $(READ_COUNTS) $(FINAL_BAIS) $(FINAL_BAMS) # $(BT2_INDEX_FILES) $(FINAL_FASTQS) 
 
 todo:
-	@echo "BETTER READ FILTERING"
 	@echo "GET ANNOTATIONS FROM GUILHEM(sp?)"
-	@echo "NEXT: DESeq (or DESeq2) differential analysis"
 
-test:
+test: $(TOPHAT_BASE_DIR)/SC-ECRNA10_TAGCTT_L003/test.bam
 	@echo $(FINAL_BAMS)
 	@echo $(FINAL_BAIS)
 	@echo $(READ_COUNTS)
+
+figs : $(PILEUP_PLOTS)
 #===============================================================================
 #===============================================================================
 # Download and merge reference genomes 
@@ -82,10 +100,10 @@ $(GTF) :
 # Crude Filtering of Cassava failed reads
 # from http://cancan.cshl.edu/labmembers/gordon/fastq_illumina_filter/
 
-$(FINAL_FASTQ_DIR)/%.fastq.gz : $(RAW_FASTQ_DIR)/%.fastq.gz
-	$(dir_guard)
-	zcat  $^ | grep -A 3 '^@.* [^:]*:N:[^:]*:' | grep -v "^--$$" | gzip -c > $@.tmp
-	mv $@.tmp $@
+# $(FINAL_FASTQ_DIR)/%.fastq.gz : $(RAW_FASTQ_DIR)/%.fastq.gz
+# 	$(dir_guard)
+# 	zcat  $^ | grep -A 3 '^@.* [^:]*:N:[^:]*:' | grep -v "^--$$" | gzip -c > $@.tmp
+# 	mv $@.tmp $@
 #--------------------------------------------------------------------------------
 # Run Tophat
 #-----------
@@ -103,6 +121,15 @@ $(TOPHAT_BASE_DIR)/%/accepted_hits.bam : $(GTF) $(FINAL_FASTQ_DIR)/%$(FASTQ_SUFF
 		--max-intron-length 4000 --num-threads $(NUMTHREADS) \
 		--library-type fr-unstranded --no-coverage-search \
 		$(INDEXBASE) $(word 2,$^)
+	mv $(OUTDIR) $(@D)
+
+$(TOPHAT_BASE_DIR)/%.bam : $(TOPHAT_BASE_DIR)/%/accepted_hits.bam
+	ln -s $< $@
+
+$(TOPHAT_BASE_DIR)/%/test.bam : $(RAW_FASTQ_DIR)/%$(FASTQ_SUFFIX) $(BT2_INDEX_FILES)
+	$(eval OUTDIR :=  $(@D)_tmpthoutdir)
+	mkdir -p $(OUTDIR)
+	echo "blah" > $(OUTDIR)/$(@F)
 	mv $(OUTDIR) $(@D)
 #--------------------------------------------------------------------------------
 # Index BAMs
@@ -130,7 +157,8 @@ $(CNEO_ANNOT) :
 	wget --no-directories --directory-prefix $(@D) http://fungalgenomes.org/public/cryptococcus/CryptoDB/product_names/Cneo_H99.AHRD.20131001.tab
 
 deseq : $(CNEO_ANNOT)
-	Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --usecwd
+	## Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --usecwd
+	Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R
 	printf '\a';printf '\a';printf '\a'
 	printf '\a';printf '\a';printf '\a'
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -150,6 +178,22 @@ deseq : $(CNEO_ANNOT)
 
 #===============================================================================
 
+$(FINAL_FASTQ_DIR)/adapter.fa : $(ILLUMINA_ADAPTERS) $(RAW_FASTQ_DIR)
+	$(dir_guard)
+	mkdir -p $(TMP_DIR)
+	ls -1 $(word 2,$^) | cut -f2 -d_ | sort | uniq > $(INDICES)
+	grep -B1 -f $(INDICES) $< > $@.tmp
+	grep -B1 -A1 Universal $< >> $@.tmp
+	mv $@.tmp $@
+
+$(FINAL_FASTQ_DIR)/%.fastq.gz : $(ADAPTERS_USED) $(RAW_FASTQ_DIR)/%.fastq.gz
+	$(dir_guard)
+	fastq-mcf -o $(basename $@).TMP.gz $< <(gunzip -c $(word 2,$^);)
+	mv $(basename $@).TMP.gz $@
+
+#--------------------------------------------------
+$(FIG_DIR)/%_pileup.pdf : $(PILEUP_PLOT_TABLE) $(FINAL_BAMS) $(FINAL_BAIS)
+	python2.7 $(SCRIPTS)/plot_pileup.py --gff  genome/h99_2.gtf --linewidth 0.5 --legendsize 12 --noxlabel --subplot --figsize 8 30 --table $< -o $@ --gene $*
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 # END IN PROGRESS 
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -221,8 +265,10 @@ r_real:
 
 # Cleanup
 #-----------
+clean :
+	rm -rf $(FINAL_FASTQ_DIR) $(COUNT_DIR) $(TOPHAT_BASE_DIR)
+
 pristine:
-	# rm -rf $(DIR_LIST)
 	find . -type d -delete
 tidy:
 	rm -rf $(STAGE_DIR)/*
