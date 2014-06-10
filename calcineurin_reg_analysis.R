@@ -18,14 +18,20 @@ suppressPackageStartupMessages(library("optparse"))
 
 option_list <- list( 
     make_option("--table", default=file.path(basedir,"info","calcineurin_sample_table.csv"), 
-                help = "Sample table file for count data [default: \"%default\"]")
+                help = "Sample table file for count data [default: \"%default\"]"),
+    make_option("--label", default="", 
+                help = "Prefix LABEL to output file names"),
+    make_option("--fc", type="numeric", default=2,
+                help="Minimum fold change cutoff for genes"),
+    make_option("--fdr", type="numeric", default=0.2,
+                help="Maximum false discovery rate (FDR) cutoff for genes")
     )
 opt <- parse_args(OptionParser(option_list=option_list))
 
 # counttab.file=file.path(basedir,"info","calcineurin_sample_table_drop_bad_cnako.csv")
 counttab.file=opt$table
+outbase = file.path(outdir,opt$label)
 ##================================================================================
-
 sampleData = read.csv(counttab.file,comment.char="#", colClasses=c("character","numeric","character","factor","factor"))
 sampleData$genotype = factor(sampleData$genotype, levels=c("WT", "KI_CNA1", "KI_CRZ1", "KO_cna1", "KO_crz1"))
 sampleTable = transform(sampleData, sampleName=sample_name,fileName=sample_file,condition=genotype)
@@ -71,7 +77,7 @@ resultsNames(ddsHTSeq)[3:6]
 
 
 
-FindDiffGenes = function(ddsHTSeq,outdir, fdrcutoff=0.05, fccutoff=2,countfilter=FALSE){
+FindDiffGenes = function(ddsHTSeq,outbase, fdrcutoff=0.05, fccutoff=2,countfilter=FALSE){
     ## stop("need to do filtering for each comparison????")
     log2fc = log2(fccutoff)
     # for(var in seq) expr
@@ -109,22 +115,22 @@ FindDiffGenes = function(ddsHTSeq,outdir, fdrcutoff=0.05, fccutoff=2,countfilter
         fileend=paste(fdrcutoff*100,"fdr_", fccutoff,"fc",filtered,".csv",sep="")
         filt.res = cur.res[which((cur.res$padj < fdrcutoff) &
                           (abs(cur.res$log2FoldChange) >= log2fc)),]
-        write.csv(as.data.frame(filt.res),file=file.path(outdir,paste(coeff, "results",fileend,sep="_")))
+        write.csv(as.data.frame(filt.res),file=paste(sep="",outbase,paste(sep="_",coeff, "results",fileend)))
         ListOfGeneVecs[[sample]] = row.names(filt.res)
     }
 
     KOcna1Genes = ListOfGeneVecs[["KO_cna1"]]
     KOcrz1Genes = ListOfGeneVecs[["KO_crz1"]]
-    write.csv(KOcna1Genes,file=file.path(outdir,paste("cna1ko_genes",fileend,sep="_")))
-    write.csv(KOcrz1Genes,file=file.path(outdir,paste("crz1ko_genes",fileend,sep="_")))
-    write.csv(intersect(KOcna1Genes,KOcrz1Genes),file=file.path(outdir,paste("cna1ko_crz1ko_intersect",fileend,sep="_")))
-    write.csv(setdiff(KOcna1Genes,KOcrz1Genes),file=file.path(outdir,paste("cna1ko_unique",fileend,sep="_")))
-    write.csv(setdiff(KOcrz1Genes,KOcna1Genes),file=file.path(outdir,paste("crz1ko_unique",fileend,sep="_")))
+    write.csv(KOcna1Genes,file=paste(sep="",outbase,paste("cna1ko_genes",fileend,sep="_")))
+    write.csv(KOcrz1Genes,file=paste(sep="",outbase,paste("crz1ko_genes",fileend,sep="_")))
+    write.csv(intersect(KOcna1Genes,KOcrz1Genes),file=paste(sep="",outbase,paste("cna1ko_crz1ko_intersect",fileend,sep="_")))
+    write.csv(setdiff(KOcna1Genes,KOcrz1Genes),file=paste(sep="",outbase,paste("cna1ko_unique",fileend,sep="_")))
+    write.csv(setdiff(KOcrz1Genes,KOcna1Genes),file=paste(sep="",outbase,paste("crz1ko_unique",fileend,sep="_")))
     ## return(list("KOcna1Genes" = KOcna1Genes,"KOcrz1Genes"=KOcrz1Genes))
     return(ListOfGeneVecs)
 }
 ##------- CRZ1 overexpression ------
-Crz1OverexpressHeatmap = function(ddsHTSeq,outdir,clustmethod="average"){
+Crz1OverexpressHeatmap = function(ddsHTSeq,outbase,clustmethod="average"){
     cna1.id="CNAG_04796"
     crz1.id="CNAG_00156"
     crz1mat = counts(ddsHTSeq,normalized=TRUE)[c(cna1.id,crz1.id),]
@@ -133,7 +139,7 @@ Crz1OverexpressHeatmap = function(ddsHTSeq,outdir,clustmethod="average"){
     colnames(crz1mat) = paste(cols$condition, cols$temp, substr(rownames(cols),6,7), sep=" : ")
     hmcol <- colorRampPalette(brewer.pal(9, "GnBu"))(100)
     ## pdf(file.path(outdir,"crz1_overexpress.pdf"))
-    png(file.path(outdir,"crz1_overexpress.png"),width = 8, height = 10, units = "in", res = 300)
+    png(paste(sep="",outbase,"crz1_overexpress.png"),width = 8, height = 10, units = "in", res = 300)
     heatmap.2(t(crz1mat), trace="none", col = rev(hmcol), margin=c(7, 7),cexCol=1,
               hclustfun=function(d,members=NULL){hclust(d,method=clustmethod,members)})
     dev.off()
@@ -179,7 +185,7 @@ GenesOfInterestHeatmap = function(genes.of.interest,ddsHTSeq,outfile,clustmethod
     dev.off()
 }
 ##----- Heatmap of the sample-to-sample distances------
-SampleSampleDistHeatmap = function(ddsHTSeq,outdir,clustmethod="average"){
+SampleSampleDistHeatmap = function(ddsHTSeq,outbase,clustmethod="average"){
     ## select <- order(rowMeans(counts(dds,normalized=TRUE)),decreasing=TRUE)[1:30] 
     hmcol <- colorRampPalette(brewer.pal(9, "GnBu"))(100)
 
@@ -201,7 +207,7 @@ SampleSampleDistHeatmap = function(ddsHTSeq,outdir,clustmethod="average"){
     ## rownames(mat) <- colnames(mat) <- with(colData(ddsHTSeq),
     ##                                        paste(condition, temp, sep=" : "))
     ## sampleCompareHeatmap = file.path(outdir,paste("sample_compare_heatmap_",clustmethod,".pdf",sep=""))
-    sampleCompareHeatmap = file.path(outdir,paste("sample_compare_heatmap_",clustmethod,".png",sep=""))
+    sampleCompareHeatmap = paste(sep="",outbase,paste("sample_compare_heatmap_",clustmethod,".png",sep=""))
     # pdf(sampleCompareHeatmap)
     png(sampleCompareHeatmap,width = 7, height = 7, units = "in", res = 300)
     heatmap.2(mat, trace="none", col = rev(hmcol), margin=c(7, 7),
@@ -211,7 +217,7 @@ SampleSampleDistHeatmap = function(ddsHTSeq,outdir,clustmethod="average"){
     dev.off()
     ## sampleComparePCA = file.path(outdir,"sample_compare_pca.pdf")
     ## pdf(sampleComparePCA)
-    sampleComparePCA = file.path(outdir,"sample_compare_pca.png")
+    sampleComparePCA = paste(sep="",outbase,"sample_compare_pca.png")
     png(sampleComparePCA,width = 8, height = 10, units = "in", res = 300)
     sampleplt = plotPCA(rld, intgroup=c("condition", "temp"))
     print(sampleplt)
@@ -275,7 +281,7 @@ AnnotateGeneLists = function(GeneVec,outpath,annotdir){
 ## mapply(FUN=get.genes.counts,resultsNames(ddsHTSeq),MoreArgs = list(dds=ddsHTSeq,fdr=0.05))
 ##===========================================================================
 ##===========================================================================
-Crz1OverexpressHeatmap(ddsHTSeq,outdir)
+Crz1OverexpressHeatmap(ddsHTSeq,outbase)
 
 # fdrcutoff = 0.05
 # fdrcutoff = 0.2
@@ -285,8 +291,14 @@ Crz1OverexpressHeatmap(ddsHTSeq,outdir)
 ## fclist = c(2,0)
 ## fdrlist = c(0.2, 0.05)
 ## filtlist = c(TRUE,FALSE)
-fclist = c(2)
-fdrlist = c(0.2)
+## ##------------------------------------------------------------
+## fclist = c(2)
+## fdrlist = c(0.2)
+## ##------------------------------------------------------------
+##------------------------------------------------------------
+fclist = c(opt$fc)
+fdrlist = c(opt$fdr)
+##------------------------------------------------------------
 filtlist = c(TRUE)
 for (curfc in fclist) {
     for (countfilter in filtlist){
@@ -298,7 +310,7 @@ for (curfc in fclist) {
             }
             fileend=paste(curfdr*100,"fdr_", curfc,"fc",filtered,sep="")
             
-            fdg = FindDiffGenes(ddsHTSeq, outdir,fdrcutoff=curfdr,fccutoff=curfc,countfilter=countfilter)
+            fdg = FindDiffGenes(ddsHTSeq, outbase,fdrcutoff=curfdr,fccutoff=curfc,countfilter=countfilter)
             KOcna1Genes = fdg[["KO_cna1"]] ## fdg$KOcna1Genes
             KOcrz1Genes = fdg[["KO_crz1"]] ## fdg$KOcrz1Genes
 
@@ -311,22 +323,22 @@ for (curfc in fclist) {
             ListOfGeneSets[["cna1ko_unique"]] = setdiff(KOcna1Genes,KOcrz1Genes)
             ListOfGeneSets[["crz1ko_unique"]] = setdiff(KOcrz1Genes,KOcna1Genes)
             GenesOfInterestHeatmap(stack(ListOfGeneSets)$values,ddsHTSeq, 
-                                   outfile= file.path(outdir,paste("goi_heatmap_", fileend,sep="")))
+                                   outfile= paste(sep="",outbase,paste("goi_heatmap_", fileend,sep="")))
             ListOfGeneSets[["KI_CRZ1"]] = fdg[["KI_CRZ1"]]
 
             ExportNormedCounts(rownames(ddsHTSeq),
-                               file.path(outdir,"cna1_crz1_allcounts.csv"),
+                               paste(sep="",outbase,"cna1_crz1_allcounts.csv"),
                                ddsHTSeq)
             for (name in names(ListOfGeneSets)) {
                 GenesOfInterestHeatmap(ListOfGeneSets[[name]],ddsHTSeq, 
-                                        outfile= file.path(outdir,paste(name,"_heatmap_", fileend,sep="")))
+                                        outfile= paste(sep="",outbase,paste(name,"_heatmap_", fileend,sep="")))
                 AnnotateGeneLists(ListOfGeneSets[[name]],
-                                  file.path(outdir,paste(name,fileend,"annot.csv",sep="_")),
+                                  paste(sep="",outbase,paste(name,fileend,"annot.csv",sep="_")),
                                   annotdir)
                 ## ExportNormedCounts(KOcna1Genes,KOcrz1Genes,ddsHTSeq,fileend,outdir)
                 ## fileend=paste(fileend,"_counts.csv",sep="")
                 ExportNormedCounts(ListOfGeneSets[[name]],
-                                  file.path(outdir,paste(name,fileend,"counts.csv",sep="_")),
+                                  paste(sep="",outbase,paste(name,fileend,"counts.csv",sep="_")),
                                   ddsHTSeq)
             }
         }
@@ -334,7 +346,7 @@ for (curfc in fclist) {
 }
 ## Do following last because it ??alters esitmates??
 for (clust in c("ward", "single", "complete", "average", "mcquitty", "median", "centroid")) {
-    SampleSampleDistHeatmap(ddsHTSeq,outdir,clustmethod=clust)
+    SampleSampleDistHeatmap(ddsHTSeq,outbase,clustmethod=clust)
 }
 ##------- Individual Comparisons ------
 # WT_24C <-> KO_crz1_24C

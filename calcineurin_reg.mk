@@ -5,7 +5,7 @@
 # might be able to use bash -c "COMMANDLINE" for that line specifically
 SHELL := /bin/bash
 
-.PHONY: clean test
+.PHONY: clean test results
 # .PRECIOUS: %.bam
 # .SECONDARY: %.bam
 .PRECIOUS:
@@ -54,6 +54,7 @@ ILLUMINA_ADAPTERS=$(INFO_DIR)/illumina_adapters.fasta
 ADAPTERS_USED=$(FINAL_FASTQ_DIR)/adapter.fa
 INDICES=$(TMP_DIR)/adapter_indices.txt
 
+DESEQ_RESULTS_DIR:=results
 #--------------------------------------------------
 dir_guard=@mkdir -p $(@D)
 
@@ -156,9 +157,22 @@ $(CNEO_ANNOT) :
 	$(dir_guard)
 	wget --no-directories --directory-prefix $(@D) http://fungalgenomes.org/public/cryptococcus/CryptoDB/product_names/Cneo_H99.AHRD.20131001.tab
 
-deseq : $(CNEO_ANNOT)
-	## Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --usecwd
+deseq_test : $(CNEO_ANNOT)
 	Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R
+	printf '\a';printf '\a';printf '\a'
+	printf '\a';printf '\a';printf '\a'
+
+deseq_analysis : $(CNEO_ANNOT)
+	Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --label drops7_ --table info/calcineurin_sample_table_drop_crz1s7.csv --fc 0 --fdr 0.2
+	Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --label drops7_ --table info/calcineurin_sample_table_drop_crz1s7.csv --fc 0 --fdr 0.05
+	Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --table info/calcineurin_sample_table.csv --fc 0 --fdr 0.2
+	Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --table info/calcineurin_sample_table.csv --fc 0 --fdr 0.05
+	printf '\a';printf '\a';printf '\a'
+	printf '\a';printf '\a';printf '\a'
+
+deseq_label_test : $(CNEO_ANNOT)
+	## Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --usecwd
+	Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --label test
 	printf '\a';printf '\a';printf '\a'
 	printf '\a';printf '\a';printf '\a'
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -252,20 +266,14 @@ $(TOPHAT_BASE_DIR)/%.bam : $(TOPHAT_BASE_DIR)/%/accepted_hits.bam
 	ln -s $(subst $(TOPHAT_BASE_DIR)/,,$<) $@
 #===============================================================================
 #===============================================================================
-
-#===============================================================================
-# Run Analysis in R
-#=============================
-## wget http://fungalgenomes.org/public/cryptococcus/CryptoDB/product_names/Cneo_H99.AHRD.20131001.tab
-r_real:
-	Rscript --no-restore $(BREM)/cneo_hybrid_rnaseq/cneo_hybrid_rnaseq.R --real
-	printf '\a';printf '\a';printf '\a'
-	printf '\a';printf '\a';printf '\a'
 #===============================================================================
 
 # Cleanup
 #-----------
 clean :
+	rm -rf $(DESEQ_RESULTS_DIR)
+
+veryclean :
 	rm -rf $(FINAL_FASTQ_DIR) $(COUNT_DIR) $(TOPHAT_BASE_DIR)
 
 pristine:
