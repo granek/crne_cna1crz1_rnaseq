@@ -1,8 +1,3 @@
-library("DESeq2")
-library("RColorBrewer")
-library("gplots")
-
-##================================================================================
 if (interactive()){
     basedir<<-file.path(Sys.getenv("CNA"),"rstudio")
 } else {
@@ -27,7 +22,12 @@ option_list <- list(
                 help="Maximum false discovery rate (FDR) cutoff for genes")
     )
 opt <- parse_args(OptionParser(option_list=option_list))
-
+##================================================================================
+library("DESeq2")
+library("RColorBrewer")
+library("gplots")
+writeLines(capture.output(sessionInfo()), file.path(outdir,"sessionInfo.txt"))
+##================================================================================
 # counttab.file=file.path(basedir,"info","calcineurin_sample_table_drop_bad_cnako.csv")
 counttab.file=opt$table
 outbase = file.path(outdir,opt$label)
@@ -70,9 +70,11 @@ res <- results(ddsHTSeq)
 ##===========================================================================
 ##===========================================================================
 
-
 head(res)
-resultsNames(ddsHTSeq)
+print("----------------------------------------")
+print("----------------------------------------\nresultsNames")
+print("----------------------------------------")
+print(resultsNames(ddsHTSeq))
 resultsNames(ddsHTSeq)[3:6]
 
 
@@ -83,9 +85,18 @@ FindDiffGenes = function(ddsHTSeq,outbase, fdrcutoff=0.05, fccutoff=2,countfilte
     # for(var in seq) expr
     ListOfGeneVecs = list()
     for(sample in c("KI_CNA1","KI_CRZ1","KO_cna1","KO_crz1")) {
-        coeff = paste("condition",sample, "vs_WT",sep="_")
-        ## print(coeff)
-        cur.res = results(ddsHTSeq,coeff)
+        if (packageVersion("DESeq2")=="1.2.10"){
+            coeff = paste("condition",sample, "vs_WT",sep="_")
+            outfile = paste(sep="_",coeff, "results",fileend)
+            cur.res = results(ddsHTSeq,name=coeff)
+        }else{
+            coeff = paste("condition",sample,sep="")
+            outfile = paste("condition",sample, "vs_WT","results",fileend,sep="_")
+            ## contrast = c("treatment", "DPN", "Control")
+            cur.res = results(ddsHTSeq,contrast = c("condition", sample, "WT"))
+        }
+        print("coeff")
+        print(coeff)
         cur.res = cur.res[order(cur.res$padj),]
         ## print(sample)
         print(
@@ -115,7 +126,8 @@ FindDiffGenes = function(ddsHTSeq,outbase, fdrcutoff=0.05, fccutoff=2,countfilte
         fileend=paste(fdrcutoff*100,"fdr_", fccutoff,"fc",filtered,".csv",sep="")
         filt.res = cur.res[which((cur.res$padj < fdrcutoff) &
                           (abs(cur.res$log2FoldChange) >= log2fc)),]
-        write.csv(as.data.frame(filt.res),file=paste(sep="",outbase,paste(sep="_",coeff, "results",fileend)))
+        outfile = paste("condition",sample, "vs_WT","results",fileend,sep="_")
+        write.csv(as.data.frame(filt.res),file=paste(sep="",outbase,outfile))
         ListOfGeneVecs[[sample]] = row.names(filt.res)
     }
 
