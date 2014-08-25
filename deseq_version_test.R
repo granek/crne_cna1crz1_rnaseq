@@ -1,5 +1,5 @@
 if (interactive()){
-    basedir<<-file.path(Sys.getenv("CNA"),"make_cna/deseq_version_test")
+    basedir<<-file.path(Sys.getenv("CNA"),"rstudio")
 } else {
     basedir<<-"."
 }
