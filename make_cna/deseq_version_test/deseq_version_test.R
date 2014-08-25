@@ -1,5 +1,5 @@
 if (interactive()){
-    basedir<<-file.path(Sys.getenv("CNA"),"rstudio")
+    basedir<<-file.path(Sys.getenv("CNA"),"make_cna/deseq_version_test")
 } else {
     basedir<<-"."
 }
@@ -24,8 +24,8 @@ option_list <- list(
 opt <- parse_args(OptionParser(option_list=option_list))
 ##================================================================================
 library("DESeq2")
-library("RColorBrewer")
-library("gplots")
+## library("RColorBrewer")
+## library("gplots")
 writeLines(capture.output(sessionInfo()), file.path(outdir,"sessionInfo.txt"))
 ##================================================================================
 # counttab.file=file.path(basedir,"info","calcineurin_sample_table_drop_bad_cnako.csv")
@@ -43,7 +43,7 @@ ddsHTSeq <- DESeqDataSetFromHTSeqCount(sampleTable = sampleTable,
                                            design= ~ condition)
 ## design(dds) <- formula(~ type + condition)
 design(ddsHTSeq) <- formula(~ temp + condition)
-ddsHTSeq <- DESeq(ddsHTSeq)
+ddsHTSeq <- DESeq(ddsHTSeq,betaPrior = FALSE)
 res <- results(ddsHTSeq)
 
 head(res)
@@ -61,13 +61,15 @@ FindDiffGenes = function(ddsHTSeq,outbase, fdrcutoff=0.05, fccutoff=2,countfilte
     # for(var in seq) expr
     ListOfGeneVecs = list()
     for(sample in c("KI_CNA1","KI_CRZ1","KO_cna1","KO_crz1")) {
-        if (packageVersion("DESeq2")=="1.2.10"){
-            coeff = paste("condition",sample, "vs_WT",sep="_")
-            outfile = paste(sep="_",coeff, "results",fileend)
-        }else{
-            coeff = paste("condition",sample,sep="")
-            outfile = paste("condition",sample, "vs_WT","results",fileend,sep="_")
-        }
+        coeff = paste("condition",sample, "vs_WT",sep="_")
+        outfile = paste(sep="_",coeff, "results",fileend)
+        ## if (packageVersion("DESeq2")=="1.2.10"){
+        ##     coeff = paste("condition",sample, "vs_WT",sep="_")
+        ##     outfile = paste(sep="_",coeff, "results",fileend)
+        ## }else{
+        ##     coeff = paste("condition",sample,sep="")
+        ##     outfile = paste("condition",sample, "vs_WT","results",fileend,sep="_")
+        ## }
         print("coeff")
         print(coeff)
         cur.res = results(ddsHTSeq,name=coeff)
@@ -109,41 +111,13 @@ FindDiffGenes = function(ddsHTSeq,outbase, fdrcutoff=0.05, fccutoff=2,countfilte
     KOcrz1Genes = ListOfGeneVecs[["KO_crz1"]]
     write.csv(KOcna1Genes,file=paste(sep="",outbase,paste("cna1ko_genes",fileend,sep="_")))
     write.csv(KOcrz1Genes,file=paste(sep="",outbase,paste("crz1ko_genes",fileend,sep="_")))
-    write.csv(intersect(KOcna1Genes,KOcrz1Genes),file=paste(sep="",outbase,paste("cna1ko_crz1ko_intersect",fileend,sep="_")))
-    write.csv(setdiff(KOcna1Genes,KOcrz1Genes),file=paste(sep="",outbase,paste("cna1ko_unique",fileend,sep="_")))
-    write.csv(setdiff(KOcrz1Genes,KOcna1Genes),file=paste(sep="",outbase,paste("crz1ko_unique",fileend,sep="_")))
+    ## write.csv(intersect(KOcna1Genes,KOcrz1Genes),file=paste(sep="",outbase,paste("cna1ko_crz1ko_intersect",fileend,sep="_")))
+    ## write.csv(setdiff(KOcna1Genes,KOcrz1Genes),file=paste(sep="",outbase,paste("cna1ko_unique",fileend,sep="_")))
+    ## write.csv(setdiff(KOcrz1Genes,KOcna1Genes),file=paste(sep="",outbase,paste("crz1ko_unique",fileend,sep="_")))
     ## return(list("KOcna1Genes" = KOcna1Genes,"KOcrz1Genes"=KOcrz1Genes))
     return(ListOfGeneVecs)
 }
 
-##------- Normalized Counts Table ------
-## ExportNormedCounts = function(KOcna1Genes,KOcrz1Genes,ddsHTSeq,fileend,outdir){
-ExportNormedCounts = function(GeneVec,outpath,ddsHTSeq){
-    ## head(counts(ddsHTSeq,normalized=TRUE))
-    ## with(colData(ddsHTSeq),paste(row.names(colData(ddsHTSeq)),paste(condition, temp, sep="_"),sep=":"))
-    ddsHTSeq.counts = counts(ddsHTSeq,normalized=TRUE)
-    coldat = colData(ddsHTSeq)
-    colnames(ddsHTSeq.counts) = paste(row.names(coldat),paste(coldat$condition, coldat$temp, sep="_"),sep=":")
-
-    write.csv(ddsHTSeq.counts[GeneVec,],file=outpath)
-}
-##------- Annotate Gene Lists ------
-AnnotateGeneLists = function(GeneVec,outpath,annotdir){
-    ##------------ Load Annotation --------
-    # annotdir = file.path(Sys.getenv("BREM"),"cneo_hybrid_rnaseq/info")
-    
-    ## wget http://fungalgenomes.org/public/cryptococcus/CryptoDB/product_names/Cneo_H99.AHRD.20131001.tab
-    ahrd.annot = read.delim(file.path(annotdir,"Cneo_H99.AHRD.20131001.tab"),stringsAsFactors = FALSE)
-    ## http://fungidb.org/fungidb/
-    fungidb.annot = read.delim(file.path(annotdir,"h99_GenesByTaxon_summary.txt"),
-        stringsAsFactors = FALSE, colClasses = c("character", rep("NULL", 2),"character","NULL"),
-        col.names=c("ID", "organism", "genomeloc", "description","empty"))
-    annot.df = merge(fungidb.annot, ahrd.annot, by="ID",all = TRUE)
-    rownames(annot.df) = annot.df$ID
-    annot.df$ID = NULL
-
-    write.csv(annot.df[GeneVec,],file=outpath)
-}
 fclist = c(opt$fc)
 fdrlist = c(opt$fdr)
 ##------------------------------------------------------------
@@ -159,36 +133,6 @@ for (curfc in fclist) {
             fileend=paste(curfdr*100,"fdr_", curfc,"fc",filtered,sep="")
             
             fdg = FindDiffGenes(ddsHTSeq, outbase,fdrcutoff=curfdr,fccutoff=curfc,countfilter=countfilter)
-            ## KOcna1Genes = fdg[["KO_cna1"]] ## fdg$KOcna1Genes
-            ## KOcrz1Genes = fdg[["KO_crz1"]] ## fdg$KOcrz1Genes
-
-            ## # ExportNormedCounts(KOcna1Genes,KOcrz1Genes,ddsHTSeq,fileend,outdir)
-            ## ## AnnotateGeneLists(KOcna1Genes,KOcrz1Genes,fileend,annotdir,outdir)
-            ## ## ExportResults(KOcna1Genes,KOcrz1Genes,ddsHTSeq,curfdr,curfc,outdir) ##HERE
-            ## ##-----------------------------------------------------------------
-            ## ListOfGeneSets = list()
-            ## ListOfGeneSets[["cna1ko_crz1ko_intersect"]] = intersect(KOcna1Genes,KOcrz1Genes)
-            ## ListOfGeneSets[["cna1ko_unique"]] = setdiff(KOcna1Genes,KOcrz1Genes)
-            ## ListOfGeneSets[["crz1ko_unique"]] = setdiff(KOcrz1Genes,KOcna1Genes)
-            ## GenesOfInterestHeatmap(stack(ListOfGeneSets)$values,ddsHTSeq, 
-            ##                        outfile= paste(sep="",outbase,paste("goi_heatmap_", fileend,sep="")))
-            ## ListOfGeneSets[["KI_CRZ1"]] = fdg[["KI_CRZ1"]]
-
-            ## ExportNormedCounts(rownames(ddsHTSeq),
-            ##                    paste(sep="",outbase,"cna1_crz1_allcounts.csv"),
-            ##                    ddsHTSeq)
-            ## for (name in names(ListOfGeneSets)) {
-            ##     GenesOfInterestHeatmap(ListOfGeneSets[[name]],ddsHTSeq, 
-            ##                             outfile= paste(sep="",outbase,paste(name,"_heatmap_", fileend,sep="")))
-            ##     AnnotateGeneLists(ListOfGeneSets[[name]],
-            ##                       paste(sep="",outbase,paste(name,fileend,"annot.csv",sep="_")),
-            ##                       annotdir)
-            ##     ## ExportNormedCounts(KOcna1Genes,KOcrz1Genes,ddsHTSeq,fileend,outdir)
-            ##     ## fileend=paste(fileend,"_counts.csv",sep="")
-            ##     ExportNormedCounts(ListOfGeneSets[[name]],
-            ##                       paste(sep="",outbase,paste(name,fileend,"counts.csv",sep="_")),
-            ##                       ddsHTSeq)
-            ## }
         }
     }   
 }
