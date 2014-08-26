@@ -44,7 +44,7 @@ ddsHTSeq <- DESeqDataSetFromHTSeqCount(sampleTable = sampleTable,
 ## design(dds) <- formula(~ type + condition)
 design(ddsHTSeq) <- formula(~ temp + condition)
 ddsHTSeq <- DESeq(ddsHTSeq)
-res <- results(ddsHTSeq)
+res <- results(ddsHTSeq,independentFiltering=TRUE)
 
 ##===========================================================================
 ##===========================================================================
@@ -80,6 +80,7 @@ resultsNames(ddsHTSeq)[3:6]
 
 
 FindDiffGenes = function(ddsHTSeq,outbase, fdrcutoff=0.05, fccutoff=2,countfilter=FALSE){
+    print(paste("countfilter:", countfilter))
     ## stop("need to do filtering for each comparison????")
     log2fc = log2(fccutoff)
     # for(var in seq) expr
@@ -95,8 +96,7 @@ FindDiffGenes = function(ddsHTSeq,outbase, fdrcutoff=0.05, fccutoff=2,countfilte
             ## contrast = c("treatment", "DPN", "Control")
             cur.res = results(ddsHTSeq,contrast = c("condition", sample, "WT"))
         }
-        print("coeff")
-        print(coeff)
+        print(paste("coeff", coeff))
         cur.res = cur.res[order(cur.res$padj),]
         ## print(sample)
         print(
@@ -311,10 +311,11 @@ Crz1OverexpressHeatmap(ddsHTSeq,outbase)
 fclist = c(opt$fc)
 fdrlist = c(opt$fdr)
 ##------------------------------------------------------------
-filtlist = c(TRUE)
+filtlist = c(FALSE)
 for (curfc in fclist) {
     for (countfilter in filtlist){
         for (curfdr in fdrlist){
+            print(paste("countfilter:", countfilter))
             if (countfilter) {
                 filtered="_filt"
             } else {
