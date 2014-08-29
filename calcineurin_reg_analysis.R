@@ -1,3 +1,5 @@
+##  export R_LIBS_USER="/Users/josh/Library/R/3.0/library/"; /sw/bin/R-3.0 --no-restore-data
+
 if (interactive()){
     basedir<<-file.path(Sys.getenv("CNA"),"rstudio")
 } else {
@@ -45,30 +47,6 @@ ddsHTSeq <- DESeqDataSetFromHTSeqCount(sampleTable = sampleTable,
 design(ddsHTSeq) <- formula(~ temp + condition)
 ddsHTSeq <- DESeq(ddsHTSeq)
 res <- results(ddsHTSeq,independentFiltering=TRUE)
-
-##===========================================================================
-##===========================================================================
-## HERE >>>>>>>
-## stop("Set up filtering")
-## if ("--nofilter" %in% args) {
-##     print("Not Filtering")
-## } else {
-##     print("Filtering Genes with mean counts less than 10 or NA pvalue")
-##     use <- res$baseMean >= 10 & !is.na(res$pvalue)
-##     table(use)
-##     resFilt <- res[use,]
-##     resFilt$padj <- p.adjust(resFilt$pvalue, method="BH")
-##     sum(res$padj < .1, na.rm=TRUE)
-##     sum(resFilt$padj < .1, na.rm=TRUE)
-##     res = resFilt
-##     ## antisense.res = results(anti.ddsHTSeq)
-##     ## antisense.use <- antisense.res$baseMean >= 10
-##     ## antisense.counts.filt = antisense.counts[antisense.use,]
-## }
-## 
-## HERE <<<<<<
-##===========================================================================
-##===========================================================================
 
 head(res)
 print("----------------------------------------")
@@ -357,10 +335,20 @@ for (curfc in fclist) {
         }
     }   
 }
-## Do following last because it ??alters esitmates??
-for (clust in c("ward", "single", "complete", "average", "mcquitty", "median", "centroid")) {
-    SampleSampleDistHeatmap(ddsHTSeq,outbase,clustmethod=clust)
-}
+###################################################
+### code chunk number 8: DESeq2_report (eval = FALSE)
+# from http://bioconductor.org/packages/release/bioc/vignettes/ReportingTools/inst/doc/rnaseqAnalysis.R
+###################################################
+## library(ReportingTools)
+## des2Report <- HTMLReport(shortName = 'RNAseq_analysis_with_DESeq2',
+##     title = 'RNA-seq analysis of differential expression using DESeq2',
+##     reportDirectory = "./reports")
+## publish(ddsHTSeq,des2Report, pvalueCutoff=0.05,
+##     annotation.db="org.Mm.eg.db", factor = colData(mockRna.dse)$conditions,
+##     reportDir="./reports")
+## finish(des2Report)
+##============================================================
+
 ##------- Individual Comparisons ------
 # WT_24C <-> KO_crz1_24C
 # WT_24C <-> KO_cna1_24C
@@ -372,6 +360,43 @@ for (clust in c("ward", "single", "complete", "average", "mcquitty", "median", "
 
 # KO_cna1_24C <->  KO_cna1_37C
 # KO_crz1_24C <->  KO_crz1_37C
+
+## ## ----paraSetup-----------------------------------------------------------
+## ddsCtrst <- ddsPara[, ddsPara$time == "48h"]
+## as.data.frame(colData(ddsCtrst)[,c("patient","treatment")])
+## design(ddsCtrst) <- ~ patient + treatment
+### HERE HERE HERE
+
+
+dds24C = ddsHTSeq[,ddsHTSeq$temp == "24C"]
+dds24C$temp <- droplevels(dds24C$temp)
+
+as.data.frame(colData(ddsHTSeq))
+as.data.frame(colData(dds24C))
+
+design(dds24C) <- ~ condition
+dds24C = DESeq(dds24C)
+
+
+res24C.WTvsKOcrz1 = results(dds24C, contrast=c("condition","KO_crz1","WT"))
+cur.res = res24C.WTvsKOcrz1
+fdrcutoff = 0.2
+fccutoff = 2
+log2fc = log2(fccutoff)
+print(table(cur.res$padj < fdrcutoff,
+            abs(cur.res$log2FoldChange) >= log2fc,
+            dnn=c(paste("FDR<",fdrcutoff), paste("FC>",fccutoff)))
+      )
+##===========================================================================
+##===========================================================================
+## Do following last because it ??alters esitmates??
+dds.sample.sample = ddsHTSeq
+for (clust in c("ward", "single", "complete", "average", "mcquitty", "median", "centroid")) {
+    SampleSampleDistHeatmap(dds.sample.sample,outbase,clustmethod=clust)
+}
+##===========================================================================
+##===========================================================================
+
 ## stop("need to do filtering for each comparison???? -> see FindDiffGenes")
 warning("Output results tables in FindDiffGenes?")
 ## stop("Use different clustering method")
