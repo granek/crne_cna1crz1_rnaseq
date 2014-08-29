@@ -333,8 +333,46 @@ for (curfc in fclist) {
 ## as.data.frame(colData(ddsCtrst)[,c("patient","treatment")])
 ## design(ddsCtrst) <- ~ patient + treatment
 ### HERE HERE HERE
+AnalyzeContrasts = function(var,numerator,denominator,
+    datasubset,dds,
+    fdrcutoff = 0.2,
+    fccutoff = 2){
+    log2fc = log2(fccutoff)
+    fileend=paste(fdrcutoff*100,"fdr_", fccutoff,"fc",".csv",sep="")
 
+    ## cur.res = results(dds, contrast=c("condition","KO_crz1","WT"))
+    print(paste(var, numerator, denominator, datasubset))
+    cur.res = results(dds, contrast=c(var,numerator,denominator))
+    print(table(cur.res$padj < fdrcutoff,
+                abs(cur.res$log2FoldChange) >= log2fc,
+                dnn=c(paste("FDR<",fdrcutoff), paste("FC>",fccutoff)))
+          )
+    filt.res = cur.res[which((cur.res$padj < fdrcutoff) &
+        (abs(cur.res$log2FoldChange) >= log2fc)),]
+    filt.res = filt.res[order(filt.res$padj),]
+    outfile = paste(var,numerator,"vs",denominator,datasubset,"results",fileend,sep="_")
+    write.csv(as.data.frame(filt.res),file=paste(sep="",outbase,outfile))
+}
 
+temp.vec = c("24C","37C")
+for (curtemp in temp.vec){
+    dds.temp = ddsHTSeq[,ddsHTSeq$temp == curtemp]
+    dds.temp$temp <- droplevels(dds.temp$temp)
+    design(dds.temp) <- ~ condition
+    dds.temp = DESeq(dds.temp)
+    ## AnalyzeContrasts(var="condition",numerator="KO_crz1",denominator="WT",datasubset=curtemp,dds.temp)
+    for (cur.list in list(
+        list(var="condition",numer="KO_crz1",denom="WT"),
+        list(var="condition",numer="KO_cna1",denom="WT"),
+        list(var="condition",numer="KO_cna1",denom="KO_crz1")
+        )){
+        AnalyzeContrasts(var=cur.list$var,
+                         numerator=cur.list$numer,
+                         denominator=cur.list$denom,
+                         datasubset=curtemp,dds.temp)
+    }
+}
+##----------------------------------------
 dds24C = ddsHTSeq[,ddsHTSeq$temp == "24C"]
 dds24C$temp <- droplevels(dds24C$temp)
 
