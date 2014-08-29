@@ -373,25 +373,6 @@ for (curtemp in temp.vec){
     }
 }
 ##----------------------------------------
-dds24C = ddsHTSeq[,ddsHTSeq$temp == "24C"]
-dds24C$temp <- droplevels(dds24C$temp)
-
-as.data.frame(colData(ddsHTSeq))
-as.data.frame(colData(dds24C))
-
-design(dds24C) <- ~ condition
-dds24C = DESeq(dds24C)
-
-
-res24C.WTvsKOcrz1 = results(dds24C, contrast=c("condition","KO_crz1","WT"))
-cur.res = res24C.WTvsKOcrz1
-fdrcutoff = 0.2
-fccutoff = 2
-log2fc = log2(fccutoff)
-print(table(cur.res$padj < fdrcutoff,
-            abs(cur.res$log2FoldChange) >= log2fc,
-            dnn=c(paste("FDR<",fdrcutoff), paste("FC>",fccutoff)))
-      )
 ##===========================================================================
 ##===========================================================================
 ## Do following last because it ??alters esitmates??
