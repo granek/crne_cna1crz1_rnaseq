@@ -302,39 +302,11 @@ for (curfc in fclist) {
     }
 }   
 
-###################################################
-### code chunk number 8: DESeq2_report (eval = FALSE)
-# from http://bioconductor.org/packages/release/bioc/vignettes/ReportingTools/inst/doc/rnaseqAnalysis.R
-###################################################
-## library(ReportingTools)
-## des2Report <- HTMLReport(shortName = 'RNAseq_analysis_with_DESeq2',
-##     title = 'RNA-seq analysis of differential expression using DESeq2',
-##     reportDirectory = "./reports")
-## publish(ddsHTSeq,des2Report, pvalueCutoff=0.05,
-##     annotation.db="org.Mm.eg.db", factor = colData(mockRna.dse)$conditions,
-##     reportDir="./reports")
-## finish(des2Report)
-##============================================================
 
 ##------- Individual Comparisons ------
-# WT_24C <-> KO_crz1_24C
-# WT_24C <-> KO_cna1_24C
-# KO_cna1_24C <->  KO_crz1_24C
-
-# WT_37C <-> KO_crz1_37C
-# WT_37C <-> KO_cna1_37C
-# KO_cna1_37C <->  KO_crz1_37C
-
-# KO_cna1_24C <->  KO_cna1_37C
-# KO_crz1_24C <->  KO_crz1_37C
-
-## ## ----paraSetup-----------------------------------------------------------
-## ddsCtrst <- ddsPara[, ddsPara$time == "48h"]
-## as.data.frame(colData(ddsCtrst)[,c("patient","treatment")])
-## design(ddsCtrst) <- ~ patient + treatment
-### HERE HERE HERE
 AnalyzeContrasts = function(var,numerator,denominator,
     datasubset,dds,
+    contrast=TRUE,
     fdrcutoff = 0.2,
     fccutoff = 2){
     log2fc = log2(fccutoff)
@@ -342,7 +314,11 @@ AnalyzeContrasts = function(var,numerator,denominator,
 
     ## cur.res = results(dds, contrast=c("condition","KO_crz1","WT"))
     print(paste(var, numerator, denominator, datasubset))
-    cur.res = results(dds, contrast=c(var,numerator,denominator))
+    if (contrast==TRUE){
+        cur.res = results(dds, contrast=c(var,numerator,denominator))
+    }else {
+        cur.res = results(dds)
+    }
     print(table(cur.res$padj < fdrcutoff,
                 abs(cur.res$log2FoldChange) >= log2fc,
                 dnn=c(paste("FDR<",fdrcutoff), paste("FC>",fccutoff)))
@@ -353,7 +329,15 @@ AnalyzeContrasts = function(var,numerator,denominator,
     outfile = paste(var,numerator,"vs",denominator,datasubset,"results",fileend,sep="_")
     write.csv(as.data.frame(filt.res),file=paste(sep="",outbase,outfile))
 }
+##----------------------------------------
+# WT_24C <-> KO_crz1_24C
+# WT_24C <-> KO_cna1_24C
+# KO_cna1_24C <->  KO_crz1_24C
 
+# WT_37C <-> KO_crz1_37C
+# WT_37C <-> KO_cna1_37C
+# KO_cna1_37C <->  KO_crz1_37C
+##----------------------------------------
 temp.vec = c("24C","37C")
 for (curtemp in temp.vec){
     dds.temp = ddsHTSeq[,ddsHTSeq$temp == curtemp]
@@ -373,6 +357,18 @@ for (curtemp in temp.vec){
     }
 }
 ##----------------------------------------
+# KO_cna1_24C <->  KO_cna1_37C
+# KO_crz1_24C <->  KO_crz1_37C
+##----------------------------------------
+ko.vec = c("KO_crz1","KO_cna1")
+for (curko in ko.vec){
+    dds.ko = ddsHTSeq[,ddsHTSeq$condition == curko]
+    dds.ko$condition <- droplevels(dds.ko$condition)
+    design(dds.ko) <- ~ temp
+    dds.ko = DESeq(dds.ko)
+    AnalyzeContrasts(var="temp",numerator="37C",denominator="24C",datasubset=curko,dds.ko,contrast=FALSE)
+}
+
 ##===========================================================================
 ##===========================================================================
 ## Do following last because it ??alters esitmates??
@@ -382,6 +378,21 @@ for (clust in c("ward", "single", "complete", "average", "mcquitty", "median", "
 }
 ##===========================================================================
 ##===========================================================================
+
+###################################################
+### code chunk number 8: DESeq2_report (eval = FALSE)
+# from http://bioconductor.org/packages/release/bioc/vignettes/ReportingTools/inst/doc/rnaseqAnalysis.R
+###################################################
+## library(ReportingTools)
+## des2Report <- HTMLReport(shortName = 'RNAseq_analysis_with_DESeq2',
+##     title = 'RNA-seq analysis of differential expression using DESeq2',
+##     reportDirectory = "./reports")
+## publish(ddsHTSeq,des2Report, pvalueCutoff=0.05,
+##     annotation.db="org.Mm.eg.db", factor = colData(mockRna.dse)$conditions,
+##     reportDir="./reports")
+## finish(des2Report)
+##============================================================
+
 
 ## stop("need to do filtering for each comparison???? -> see FindDiffGenes")
 warning("Output results tables in FindDiffGenes?")
