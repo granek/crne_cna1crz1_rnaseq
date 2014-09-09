@@ -30,6 +30,16 @@ library("RColorBrewer")
 library("gplots")
 writeLines(capture.output(sessionInfo()), file.path(outdir,"sessionInfo.txt"))
 ##================================================================================
+## Merge Annotations
+ahrd.annot = read.delim(file.path(annotdir,"Cneo_H99.AHRD.20131001.tab"),stringsAsFactors = FALSE)
+## http://fungidb.org/fungidb/
+fungidb.annot = read.delim(file.path(annotdir,"h99_GenesByTaxon_summary.txt"),
+    stringsAsFactors = FALSE, colClasses = c("character", rep("NULL", 2),"character","NULL"),
+    col.names=c("ID", "organism", "genomeloc", "description","empty"))
+annot.df = merge(fungidb.annot, ahrd.annot, by="ID",all = TRUE)
+rownames(annot.df) = annot.df$ID
+annot.df$ID = NULL
+##================================================================================
 # counttab.file=file.path(basedir,"info","calcineurin_sample_table_drop_bad_cnako.csv")
 counttab.file=opt$table
 outbase = file.path(outdir,opt$label)
@@ -308,7 +318,8 @@ AnalyzeContrasts = function(var,numerator,denominator,
     datasubset,dds,
     contrast=TRUE,
     fdrcutoff = 0.2,
-    fccutoff = 2){
+    fccutoff = 2,
+    annot=NULL){
     log2fc = log2(fccutoff)
     fileend=paste(fdrcutoff*100,"fdr_", fccutoff,"fc",".csv",sep="")
 
@@ -326,8 +337,14 @@ AnalyzeContrasts = function(var,numerator,denominator,
     filt.res = cur.res[which((cur.res$padj < fdrcutoff) &
         (abs(cur.res$log2FoldChange) >= log2fc)),]
     filt.res = filt.res[order(filt.res$padj),]
+    filt.df = as.data.frame(filt.res)
+    if (! is.null(annot)){
+      filt.df = merge(filt.df, annot, by="row.names",all.x = TRUE)
+      rownames(filt.df) <- filt.df[,1]
+      filt.df[,1] <- NULL
+    }
     outfile = paste(var,numerator,"vs",denominator,datasubset,"results",fileend,sep="_")
-    write.csv(as.data.frame(filt.res),file=paste(sep="",outbase,outfile))
+    write.csv(filt.df,file=paste(sep="",outbase,outfile))
 }
 ##----------------------------------------
 # WT_24C <-> KO_crz1_24C
@@ -353,7 +370,10 @@ for (curtemp in temp.vec){
         AnalyzeContrasts(var=cur.list$var,
                          numerator=cur.list$numer,
                          denominator=cur.list$denom,
-                         datasubset=curtemp,dds.temp)
+                         datasubset=curtemp,dds.temp,
+                         fdrcutoff = opt$fdr,
+                         fccutoff = opt$fc,
+                         annot=annot.df)
     }
 }
 ##----------------------------------------
@@ -378,6 +398,7 @@ for (clust in c("ward", "single", "complete", "average", "mcquitty", "median", "
 }
 ##===========================================================================
 ##===========================================================================
+## Also see shiny <http://shiny.rstudio.com/>
 
 ###################################################
 ### code chunk number 8: DESeq2_report (eval = FALSE)

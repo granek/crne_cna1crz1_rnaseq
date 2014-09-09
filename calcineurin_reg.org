@@ -23,9 +23,19 @@ wget --no-parent --no-host-directories --no-directories -P /nfs/gems_sata/heitma
 ** TODO Look to see if S. cerevisiae cna1_ko genes are differentially expression in C. neoformans
 ** TODO [#C] Use S. cerevisiae CRZ1 PWM to search C. neoformans promoters
 ** TODO [#C] Use KI_CRZ1 to explore effects of overexpression
+** TODO Incorporate batch information in analysis
 ** DONE Generate heatmap with genes of interest
 ** DONE Use 2 FC cutoff
 ** DONE count based filtering
 ** DONE Send to Blake
    - [X] promoter script
    - [X] counts for all samples
+* TODO Tasks from Meeting [2014-09-03 Wed]
+** TODO intersection and symmetric differences
+   - [ ] (cna1D vs WT @24C) && (crz1D vs WT @24C)
+   - [ ] (cna1D vs WT @37C) && (crz1D vs WT @37C) 
+   - [ ] (cna1D @24 vs cna1D @37C) && (crz1D @24 vs crz1D @37C)
+** TODO Heatmap labels
+   - [ ] use delta for deletions (text(x,y, expression(paste("A) ",Delta,"stbA::cat")); )
+   - [ ] for temps use degree C: xlab = expression(paste("Temperature [",degree,"C]")), 
+** TODO Add annotation to output
