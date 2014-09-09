@@ -53,12 +53,17 @@ PILEUP_PLOT_TABLE = $(INFO_DIR)/plot_pileup_table.csv
 ILLUMINA_ADAPTERS=$(INFO_DIR)/illumina_adapters.fasta
 ADAPTERS_USED=$(FINAL_FASTQ_DIR)/adapter.fa
 INDICES=$(TMP_DIR)/adapter_indices.txt
+VERSION_FILE=version.txt
 
 DESEQ_RESULTS_DIR:=results
+
+#--------------------------------------------------
+TOPHAT=tophat
+SAMTOOLS=samtools
 #--------------------------------------------------
 dir_guard=@mkdir -p $(@D)
 
-all:  results todo 
+all:  results todo version
 
 results : $(READ_COUNTS) $(FINAL_BAIS) $(FINAL_BAMS)
 
@@ -73,6 +78,16 @@ test: $(TOPHAT_BASE_DIR)/SC-ECRNA10_TAGCTT_L003/test.bam
 	@echo $(READ_COUNTS)
 
 figs : $(PILEUP_PLOTS)
+
+bams :  $(FINAL_BAMS)
+
+version : $(VERSION_FILE)
+
+$(VERSION_FILE) :
+	$(TOPHAT) -v > $@
+	$(SAMTOOLS) -v >> $@
+	$(RSCRIPT) --version >> $@
+
 #===============================================================================
 #===============================================================================
 # Download and merge reference genomes 
@@ -117,7 +132,7 @@ $(GTF) :
 $(TOPHAT_BASE_DIR)/%/accepted_hits.bam : $(GTF) $(FINAL_FASTQ_DIR)/%$(FASTQ_SUFFIX) $(BT2_INDEX_FILES)
 	$(eval OUTDIR :=  $(@D)_tmpthoutdir)
 	mkdir -p $(OUTDIR)
-	tophat --output-dir $(OUTDIR) --GTF $(word 1,$^) \
+	$(TOPHAT) --output-dir $(OUTDIR) --GTF $(word 1,$^) \
 		--transcriptome-max-hits 1 --max-multihits 1 \
 		--max-intron-length 4000 --num-threads $(NUMTHREADS) \
 		--library-type fr-unstranded --no-coverage-search \
@@ -135,7 +150,7 @@ $(TOPHAT_BASE_DIR)/%/test.bam : $(RAW_FASTQ_DIR)/%$(FASTQ_SUFFIX) $(BT2_INDEX_FI
 #--------------------------------------------------------------------------------
 # Index BAMs
 %.bam.bai : %.bam
-	samtools index $^
+	$(SAMTOOLS) index $^
 #--------------------------------------------------------------------------------
 # Count Reads
 #-----------
@@ -144,7 +159,7 @@ $(COUNT_DIR)/%_counts.tab : $(TOPHAT_BASE_DIR)/%/accepted_hits.bam $(GTF)
 	$(eval TEMP_OUT := $@.tmp)
 	$(eval ERR := $(basename $@).err)
 	$(eval TEMP_ERR := $(ERR).tmp)
-	samtools view $< | htseq-count --stranded=no --type=exon --idattr=gene_id - $(word 2,$^) 1> $(TEMP_OUT) 2> $(TEMP_ERR)
+	$(SAMTOOLS) view $< | htseq-count --stranded=no --type=exon --idattr=gene_id - $(word 2,$^) 1> $(TEMP_OUT) 2> $(TEMP_ERR)
 	mv $(TEMP_OUT) $@
 	mv $(TEMP_ERR) $(ERR)
 
@@ -163,8 +178,9 @@ deseq_test : $(CNEO_ANNOT)
 	printf '\a';printf '\a';printf '\a'
 
 deseq_analysis : $(CNEO_ANNOT)
-	Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --label drops7_ --table info/calcineurin_sample_table_drop_crz1s7.csv --fc 0 --fdr 0.2
-	Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --label drops7_ --table info/calcineurin_sample_table_drop_crz1s7.csv --fc 0 --fdr 0.05
+	# Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --label drops7_ --table info/calcineurin_sample_table_drop_crz1s7.csv --fc 2 --fdr 0.2
+	# Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --label drops7_ --table info/calcineurin_sample_table_drop_crz1s7.csv --fc 0 --fdr 0.2
+	# Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --label drops7_ --table info/calcineurin_sample_table_drop_crz1s7.csv --fc 0 --fdr 0.05
 	Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --table info/calcineurin_sample_table.csv --fc 0 --fdr 0.2
 	Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --table info/calcineurin_sample_table.csv --fc 0 --fdr 0.05
 	printf '\a';printf '\a';printf '\a'
@@ -207,6 +223,10 @@ $(FINAL_FASTQ_DIR)/%.fastq.gz : $(ADAPTERS_USED) $(RAW_FASTQ_DIR)/%.fastq.gz
 
 #--------------------------------------------------
 $(FIG_DIR)/%_pileup.pdf : $(PILEUP_PLOT_TABLE) $(FINAL_BAMS) $(FINAL_BAIS)
+	$(dir_guard)
+	# python2.7 $SCRIPTS/plot_pileup.py --gff  genome/h99_2.gtf --linewidth 1 --legendsize 12 --noxlabel --gene CNAG_00156 --subplot --table info/plot_pileup_table.csv -o $CNA/CNAG_00156_pileup.pdf --figsize 8 30 --independenty
+	# python2.7 $SCRIPTS/plot_pileup.py --gff  genome/h99_2.gtf --linewidth 1 --legendsize 12 --noxlabel --gene CNAG_00156 --subplot --table info/plot_pileup_table.csv -o $CNA/CNAG_00156_pileup_y10.pdf --figsize 8 30 --ymax 10
+	# python2.7 $SCRIPTS/plot_pileup.py --gff  genome/h99_2.gtf --linewidth 1 --legendsize 12 --noxlabel --gene CNAG_00156 --subplot --table info/plot_pileup_table.csv -o $CNA/CNAG_00156_pileup_y5.pdf --figsize 8 30 --ymax 5
 	python2.7 $(SCRIPTS)/plot_pileup.py --gff  genome/h99_2.gtf --linewidth 0.5 --legendsize 12 --noxlabel --subplot --figsize 8 30 --table $< -o $@ --gene $*
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 # END IN PROGRESS 
