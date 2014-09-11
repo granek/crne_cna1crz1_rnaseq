@@ -345,6 +345,27 @@ AnalyzeContrasts = function(var,numerator,denominator,
     }
     outfile = paste(var,numerator,"vs",denominator,datasubset,"results",fileend,sep="_")
     write.csv(filt.df,file=paste(sep="",outbase,outfile))
+    return(filt.df)
+}
+##----------------------------------------
+SetAnalyses = function(reslist1, reslist2){
+    print("------------------reslist1------------------")
+    print(names(reslist1))
+    print("------------------reslist2------------------")
+    print(names(reslist2))
+    print(reslist1$fdrcutoff)
+    fileend=paste(reslist1$fdrcutoff*100,"fdr_", reslist1$fccutoff,"fc",".csv",sep="")
+    outprefix=paste(sep="",outbase,
+        paste(reslist1$numerator,reslist1$denominator,reslist1$datasubset,sep="_"),
+        "__VS__",
+        paste(reslist2$numerator,reslist2$denominator,reslist2$datasubset,sep="_")
+        )
+    ## set_out_name = paste("KO_crz1__WT_vs_KO_cna__WT",curtemp,paste(opt$fdr*100,"fdr_", opt$fc,"fc",".csv",sep=""))
+    ## write.csv(KOcna1Genes,file=paste(sep="",outbase,paste("cna1ko_genes",fileend,sep="_")))
+    ## write.csv(KOcrz1Genes,file=paste(sep="",outbase,paste("crz1ko_genes",fileend,sep="_")))
+    write.csv(intersect(row.names(reslist1$df),row.names(reslist2$df)),file=paste(sep="__",outprefix,paste("INTERSECT",fileend,sep="_")))
+    write.csv(setdiff(row.names(reslist1$df),row.names(reslist2$df)),file=paste(sep="__",outprefix,paste(reslist1$numerator,"ONLY",fileend,sep="_")))
+    write.csv(setdiff(row.names(reslist2$df),row.names(reslist1$df)),file=paste(sep="__",outprefix,paste(reslist2$numerator,"ONLY",fileend,sep="_")))
 }
 ##----------------------------------------
 # WT_24C <-> KO_crz1_24C
@@ -361,20 +382,34 @@ for (curtemp in temp.vec){
     dds.temp$temp <- droplevels(dds.temp$temp)
     design(dds.temp) <- ~ condition
     dds.temp = DESeq(dds.temp)
+    result.list = list()
     ## AnalyzeContrasts(var="condition",numerator="KO_crz1",denominator="WT",datasubset=curtemp,dds.temp)
     for (cur.list in list(
         list(var="condition",numer="KO_crz1",denom="WT"),
         list(var="condition",numer="KO_cna1",denom="WT"),
         list(var="condition",numer="KO_cna1",denom="KO_crz1")
         )){
-        AnalyzeContrasts(var=cur.list$var,
-                         numerator=cur.list$numer,
-                         denominator=cur.list$denom,
-                         datasubset=curtemp,dds.temp,
-                         fdrcutoff = opt$fdr,
-                         fccutoff = opt$fc,
-                         annot=annot.df)
+        cur.df = AnalyzeContrasts(var=cur.list$var,
+            numerator=cur.list$numer,
+            denominator=cur.list$denom,
+            datasubset=curtemp,dds.temp,
+            fdrcutoff = opt$fdr,
+            fccutoff = opt$fc,
+            annot=annot.df)
+        ## cur.list =  
+        result.list[[paste(cur.list$numer,cur.list$denom,sep="__")]] = list(numerator=cur.list$numer,
+                       denominator=cur.list$denom,
+                       datasubset=curtemp,
+                       fdrcutoff = opt$fdr,
+                       fccutoff = opt$fc,
+                       df = cur.df)
+        print("------------------result.list A------------------")
+        print(names(result.list))
+        print(result.list$datasubset)
     }
+    print("------------------result.list------------------")
+    print(names(result.list))
+    SetAnalyses(result.list[["KO_crz1__WT"]], result.list$KO_cna1__WT)
 }
 ##----------------------------------------
 # KO_cna1_24C <->  KO_cna1_37C
@@ -386,7 +421,7 @@ for (curko in ko.vec){
     dds.ko$condition <- droplevels(dds.ko$condition)
     design(dds.ko) <- ~ temp
     dds.ko = DESeq(dds.ko)
-    AnalyzeContrasts(var="temp",numerator="37C",denominator="24C",datasubset=curko,dds.ko,contrast=FALSE)
+    AnalyzeContrasts(var="temp",numerator="37C",denominator="24C",datasubset=curko,dds.ko,contrast=FALSE,annot=annot.df)
 }
 
 ##===========================================================================
