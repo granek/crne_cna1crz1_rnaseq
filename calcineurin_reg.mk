@@ -181,8 +181,10 @@ deseq_analysis : $(CNEO_ANNOT)
 	# Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --label drops7_ --table info/calcineurin_sample_table_drop_crz1s7.csv --fc 2 --fdr 0.2
 	# Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --label drops7_ --table info/calcineurin_sample_table_drop_crz1s7.csv --fc 0 --fdr 0.2
 	# Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --label drops7_ --table info/calcineurin_sample_table_drop_crz1s7.csv --fc 0 --fdr 0.05
-	Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --table info/calcineurin_sample_table.csv --fc 0 --fdr 0.2
-	Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --table info/calcineurin_sample_table.csv --fc 0 --fdr 0.05
+	Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --table info/calcineurin_sample_table.csv --fc 2 --fdr 0.05
+	Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --table info/calcineurin_sample_table.csv --fc 2 --fdr 0.2
+	# Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --table info/calcineurin_sample_table.csv --fc 0 --fdr 0.2
+	# Rscript --no-restore $(CNA)/calcineurin_reg_analysis.R --table info/calcineurin_sample_table.csv --fc 0 --fdr 0.05
 	printf '\a';printf '\a';printf '\a'
 	printf '\a';printf '\a';printf '\a'
 
