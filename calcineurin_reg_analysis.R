@@ -1,7 +1,8 @@
 ##  export R_LIBS_USER="/Users/josh/Library/R/3.0/library/"; /sw/bin/R-3.0 --no-restore-data
 
 if (interactive()){
-    basedir<<-file.path(Sys.getenv("CNA"),"rstudio")
+    # basedir<<-file.path(Sys.getenv("CNA"),"rstudio")
+  basedir<<-"rstudio"
 } else {
     basedir<<-"."
 }
