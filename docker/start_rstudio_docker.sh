@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# https://github.com/rocker-org/rocker/wiki/Using-the-RStudio-image
+
+PASS="8_juggleD_albiNo_12_eleVens_cRush"
 DOCKER_MNTPOINT="/home/rstudio/crne_cna1crz1_rnaseq"
 HOST_BASE="$HOME/crne_cna1crz1_rnaseq"
 HOST_SCRATCH="/mnt/ibiem_scratch/Members/josh/crne_cna1crz1_rnaseq"
@@ -18,7 +21,7 @@ if [ "$1" == "shell" ]; then
 elif [ "$1" == "rstudio" ]; then
     DOCKER_COMMAND=""
     CONTAINER_NAME="rstudio_web"
-    DOCKER_ARGS="--detach --publish 8787:8787"
+    DOCKER_ARGS="--detach --publish 8787:8787 -e PASSWORD=$PASS"
 else
    echo "Must supply command line argument! Should be run as one of the following commands:"
    echo "'$0 shell'"
