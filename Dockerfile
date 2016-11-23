@@ -21,9 +21,18 @@ RUN echo "deb http://ftp.debian.org/debian jessie-backports main" >  /etc/apt/so
     git \
     samtools \
     tophat \
-    ea-utils \
+    libgsl0-dev \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+# download and compile ea-utils, since version from jessie-backports depends on R,
+# which fails
+# libgsl0-dev is for compiling ea-utils
+RUN git clone https://github.com/ExpressionAnalysis/ea-utils.git && \
+    cd ea-utils/clipper && \
+    make && \
+    make install && \
+    rm -rf ../../ea-utils/
 
 RUN Rscript -e "install.packages(pkgs = c('optparse','RColorBrewer','gplots'), \
     repos='https://cran.revolutionanalytics.com/', \
