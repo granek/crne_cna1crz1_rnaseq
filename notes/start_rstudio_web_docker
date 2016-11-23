@@ -1,0 +1,29 @@
+DOCKER_MNTPOINT="/home/rstudio/mouse_csection"
+HOST_MNTPOINT="/mnt/ibiem_scratch/Members/josh/crne_cna1crz1_rnaseq"
+WORKSPACE="$HOST_MNTPOINT/workspace"
+RAW_DATA="$HOST_MNTPOINT/raw_data"
+
+if [ ! -d "$WORKSPACE" ]; then
+    echo "NOT MOUNTED: $WORKSPACE"
+    echo "REFUSING TO START DOCKER"
+    exit 1
+fi
+
+if [ ! -d "$RAW_DATA" ]; then
+    echo "NOT MOUNTED: $RAW_DATA"
+    echo "REFUSING TO START DOCKER"
+    exit 1
+fi
+
+
+##============================================================
+# FOR NGS RStudio web GUI
+# sudo docker run -d -p 8787:8787 rocker/rstudio
+
+docker run -d -p 8787:8787 \
+       --name rstudio_qiime_web \
+       -v $HOME/hartwell/mouse_csection:$DOCKER_MNTPOINT \
+       -v $WORKSPACE:$DOCKER_MNTPOINT/workspace \
+       -v $RAW_DATA:$DOCKER_MNTPOINT/raw_data \
+       granek/rnaseq:v0rc0
+
