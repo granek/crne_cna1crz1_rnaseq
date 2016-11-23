@@ -1,6 +1,6 @@
 # Distributed under the terms of the Modified BSD License.
 
-FROM rocker/rstudio
+FROM rocker/rstudio:3.3.2
 
 MAINTAINER Josh Granek
 
