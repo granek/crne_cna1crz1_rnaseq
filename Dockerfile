@@ -41,9 +41,9 @@ RUN Rscript -e "install.packages(pkgs = c('optparse','RColorBrewer','gplots'), \
     biocLite(pkgs=c('DESeq2'))"
 
 ##------------------------------------------------------------
-USER $RSTUDIO_USER
+# USER $RSTUDIO_USER
 
-##------------------------------------------------------------
-USER root
+# ##------------------------------------------------------------
+# USER root
 
 CMD ["/init"]
