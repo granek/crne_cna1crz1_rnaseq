@@ -58,12 +58,18 @@ VERSION_FILE=version.txt
 DESEQ_RESULTS_DIR:=results
 
 #--------------------------------------------------
+#--------------------------------------------------
+FASTQ_MD5_FILE:= $(DESEQ_RESULTS_DIR)/raw_fastq_md5checksum.txt
+COUNT_MD5_FILE:= $(DESEQ_RESULTS_DIR)/count_md5checksum.txt
+
+
+#--------------------------------------------------
 TOPHAT=tophat
 SAMTOOLS=samtools
 #--------------------------------------------------
 dir_guard=@mkdir -p $(@D)
 
-all:  results todo version
+all:  version $(FASTQ_MD5_FILE) results todo  $(COUNT_MD5_FILE)
 
 results : $(READ_COUNTS) $(FINAL_BAIS) $(FINAL_BAMS)
 
@@ -84,9 +90,22 @@ bams :  $(FINAL_BAMS)
 version : $(VERSION_FILE)
 
 $(VERSION_FILE) :
-	$(TOPHAT) -v > $@
-	$(SAMTOOLS) -v >> $@
+	fastq-mcf -V > $@
+	$(TOPHAT) -v >> $@
+	$(SAMTOOLS) >> $@ 2>&1
+	htseq-count -h >> $@
 	$(RSCRIPT) --version >> $@
+
+#===============================================================================
+#===============================================================================
+$(FASTQ_MD5_FILE) : $(RAW_FASTQS_FULLPATH)
+	$(dir_guard)
+	# md5sum $(dir $<)* > $@
+	md5sum $^ > $@
+
+$(COUNT_MD5_FILE) : $(READ_COUNTS)
+	$(dir_guard)
+	md5sum $^ > $@
 
 #===============================================================================
 #===============================================================================
