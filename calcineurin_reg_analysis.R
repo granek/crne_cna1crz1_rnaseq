@@ -189,6 +189,7 @@ SampleSampleDistHeatmap = function(ddsHTSeq,outbase,clustmethod="average"){
               density.info="none", 
               col = rev(hmcol), margin=c(7, 7),
               ColSideColors=colorbar,
+              lhei = c(1,4),
               hclustfun=function(d,members=NULL){hclust(d,method=clustmethod,members)})
 
     dev.off()
