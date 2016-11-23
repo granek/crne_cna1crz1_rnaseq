@@ -8,26 +8,4 @@ orgmode_playing/
 rstudio/
 .Rproj.user
 
-# # Ignore git config files
-# # .gitignore
-# # .gitattributes
-# *.pyc
-# # Ignore mac specific files
-# .DS_Store
-# # Ignore latex generated intermediate files
-# *~
-# .#*
-# OLD/
-# TEST/
-# counts/*_counts.tab
-# results/*.pdf
-# # latex intermediate files
-# *.aux
-# *.log
-# *.synctex.gz
-# autofigs/*.pdf
-# # calcineurin_reg.Rproj
-# # Output Directories
-
-# packrat/lib*/
-# packrat/src/
+raw_data/
