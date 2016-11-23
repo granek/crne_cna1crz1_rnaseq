@@ -2,6 +2,9 @@
 
 # https://github.com/rocker-org/rocker/wiki/Using-the-RStudio-image
 
+# https://support.rstudio.com/hc/en-us/community/posts/202827628-Using-HTTPS-instead-of-HTTP
+# https://www.digitalocean.com/community/tutorials/how-to-configure-nginx-with-ssl-as-a-reverse-proxy-for-jenkins
+
 PASS="8_juggleD_albiNo_12_eleVens_cRush"
 DOCKER_MNTPOINT="/home/rstudio/crne_cna1crz1_rnaseq"
 HOST_BASE="$HOME/crne_cna1crz1_rnaseq"
