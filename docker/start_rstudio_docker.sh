@@ -6,11 +6,6 @@ HOST_SCRATCH="/mnt/ibiem_scratch/Members/josh/crne_cna1crz1_rnaseq"
 WORKSPACE="$HOST_SCRATCH/workspace"
 RAW_DATA="$HOST_SCRATCH/raw_data"
 
-# if [ "$#" -ne 1 ]; then
-#    echo "Must supply command line argument! Should be run as one of the following commands:"
-#    echo "'$0 shell'"
-#    echo "'$0 rstudio'"
-#    exit 1
 if [ "$1" == "shell" ]; then
     DOCKER_COMMAND="/bin/bash"
     CONTAINER_NAME="rstudio_shell"
@@ -44,10 +39,6 @@ if [ ! -d "$RAW_DATA" ]; then
     echo "REFUSING TO START DOCKER"
     exit 1
 fi
-
-##============================================================
-# FOR NGS RStudio web GUI
-# sudo docker run -d -p 8787:8787 rocker/rstudio
 
 docker run $DOCKER_ARGS \
        --name $CONTAINER_NAME \
