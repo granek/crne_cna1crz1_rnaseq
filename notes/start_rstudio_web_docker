@@ -53,5 +53,6 @@ docker run $DOCKER_ARGS \
        -v $HOME/hartwell/mouse_csection:$DOCKER_MNTPOINT \
        -v $WORKSPACE:$DOCKER_MNTPOINT/workspace \
        -v $RAW_DATA:$DOCKER_MNTPOINT/raw_data \
-       granek/rnaseq:v0rc0
+       granek/rnaseq:v0rc0 \
+       $DOCKER_COMMAND
 
