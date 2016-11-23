@@ -38,4 +38,4 @@ wget --no-parent --no-host-directories --no-directories -P /nfs/gems_sata/heitma
 ** TODO Heatmap labels
    - [ ] use delta for deletions (text(x,y, expression(paste("A) ",Delta,"stbA::cat")); )
    - [ ] for temps use degree C: xlab = expression(paste("Temperature [",degree,"C]")), 
-** TODO Add annotation to output
+** DONE Add annotation to output

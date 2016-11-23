@@ -185,7 +185,9 @@ SampleSampleDistHeatmap = function(ddsHTSeq,outbase,clustmethod="average"){
     sampleCompareHeatmap = paste(sep="",outbase,paste("sample_compare_heatmap_",clustmethod,".png",sep=""))
     # pdf(sampleCompareHeatmap)
     png(sampleCompareHeatmap,width = 7, height = 7, units = "in", res = 300)
-    heatmap.2(mat, trace="none", col = rev(hmcol), margin=c(7, 7),
+    heatmap.2(mat, trace="none", 
+              density.info="none", 
+              col = rev(hmcol), margin=c(7, 7),
               ColSideColors=colorbar,
               hclustfun=function(d,members=NULL){hclust(d,method=clustmethod,members)})
 

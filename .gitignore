@@ -9,3 +9,5 @@ rstudio/
 .Rproj.user
 
 raw_data/
+packrat/lib*/
+packrat/src/
