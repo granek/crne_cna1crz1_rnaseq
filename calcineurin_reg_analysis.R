@@ -184,13 +184,25 @@ SampleSampleDistHeatmap = function(ddsHTSeq,outbase,clustmethod="average"){
     ## sampleCompareHeatmap = file.path(outdir,paste("sample_compare_heatmap_",clustmethod,".pdf",sep=""))
     sampleCompareHeatmap = paste(sep="",outbase,paste("sample_compare_heatmap_",clustmethod,".png",sep=""))
     # pdf(sampleCompareHeatmap)
-    png(sampleCompareHeatmap,width = 7, height = 7, units = "in", res = 300)
+    png(sampleCompareHeatmap,width = 10, height = 9, units = "in", res = 300)
     heatmap.2(mat, trace="none", 
-              density.info="none", 
               col = rev(hmcol), margin=c(7, 7),
               ColSideColors=colorbar,
-              lhei = c(1,4),
-              hclustfun=function(d,members=NULL){hclust(d,method=clustmethod,members)})
+              hclustfun=function(d,members=NULL){hclust(d,method=clustmethod,members)},
+              density.info="none",
+              lhei = c(0.7,4),
+              keysize = 1.5,
+              key.xlab = "sample-sample distance",
+              margins = c(8,8),
+              dendrogram = "column")
+    legend(y=0.90,x=0,
+           legend = unique(names(colorbar)),
+           col = colorbar[unique(names(colorbar))],
+           lty= 1,
+           lwd = 10,
+           cex=.7,
+           y.intersp = 1.25,
+           bty = "n")
 
     dev.off()
     ## sampleComparePCA = file.path(outdir,"sample_compare_pca.pdf")
