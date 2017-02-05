@@ -1,3 +1,5 @@
 h99_scerevisiae_orthologs.tsv	http://fungidb.org/fungidb/im.do?s=ab02a5aa1187a718
 h99_afumigatus_orthologs.tsv	http://fungidb.org/fungidb/im.do?s=3ed4eed5217cb6e4
-
+h99_all_genes.tsv		http://fungidb.org/fungidb/im.do?s=ce446c67ed904c37
+scerevisiae_all_genes.tsv	http://fungidb.org/fungidb/im.do?s=da46754101994cab
+afumigatus_all_genes.tsv	http://fungidb.org/fungidb/im.do?s=85844f7ca5284cee
