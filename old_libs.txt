@@ -1,0 +1,75 @@
+
+install.packages("DESeq2", lib="/Users/testr/Rlibs/current_libs")
+
+install.packages(pkgs, lib, repos = getOption("repos"),
+                 contriburl = contrib.url(repos, type),
+                 method, available = NULL, destdir = NULL,
+                 dependencies = NA, type = getOption("pkgType"),
+                 configure.args = getOption("configure.args"),
+                 configure.vars = getOption("configure.vars"),
+                 clean = FALSE, Ncpus = getOption("Ncpus", 1L),
+                 verbose = getOption("verbose"),
+                 libs_only = FALSE, INSTALL_opts, quiet = FALSE,
+                 keep_outputs = FALSE, ...)
+
+
+source("biocLite.R")
+
+cur = "/Users/testr/Rlibs/current_libs"
+install.packages("BiocInstaller", repos="http://www.bioconductor.org/packages/2.14/bioc",lib=cur)
+library("BiocInstaller", lib=cur)
+biocLite("DESeq2", lib=cur)
+
+library("DESeq2", lib.loc=cur)
+
+##------------------------------------------------------------
+##------------------------------------------------------------
+
+R_CURRENT="/Users/testr/Rlibs/current"
+mkdir -p $R_CURRENT
+export R_LIBS_USER="$R_CURRENT"; R
+
+## Following is run in R
+source("http://bioconductor.org/biocLite.R")
+biocLite("DESeq2")
+library("DESeq2")
+sessionInfo()
+##------------------------------------------------------------
+R_OLD="/Users/testr/Rlibs/bioc2_12"
+mkdir -p $R_OLD
+export R_LIBS_USER="$R_OLD"; R
+
+## Following is run in R
+# source("http://bioconductor.org/biocLite.R")
+install.packages("BiocInstaller", repos="http://www.bioconductor.org/packages/2.12/bioc",type="source")
+library("BiocInstaller")
+
+biocLite("DESeq2",type="source")
+library("DESeq2")
+sessionInfo()
+##------------------------------------------------------------
+##------------------------------------------------------------
+
+R_CURRENT="$HOME/test/Rlibs/current"
+mkdir -p $R_CURRENT
+export R_LIBS_USER="$R_CURRENT"; R # /sw/bin/R-3.0
+
+## Following is run in R
+source("http://bioconductor.org/biocLite.R")
+biocLite("DESeq2")
+library("DESeq2")
+sessionInfo()
+##------------------------------------------------------------
+R_OLD="$HOME/test/Rlibs/bioc2_12"
+mkdir -p $R_OLD
+export R_LIBS_USER="$R_OLD"; /sw/bin/R-3.0
+
+## Following is run in R
+# source("http://bioconductor.org/biocLite.R")
+# install.packages("BiocInstaller", repos="http://www.bioconductor.org/packages/2.12/bioc",type="source")
+# library("BiocInstaller")
+
+# biocLite("DESeq2",type="source",repos="http://www.bioconductor.org/packages/2.12/bioc")
+install.packages("DESeq2",type="source",repos="http://www.bioconductor.org/packages/2.12/bioc")
+library("DESeq2")
+sessionInfo()
