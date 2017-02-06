@@ -54,3 +54,18 @@ docker run $DOCKER_ARGS \
        granek/rnaseq:v0rc0 \
        $DOCKER_COMMAND
 
+# ##============================================================
+# # FOR NGS shell into container, mount the "parker" scratch space
+# docker run --rm -it --user rstudio \
+#        -v ~/hartwell/mouse_csection:/home/rstudio/mouse_csection \
+#        -v /mnt/hts_scratch/Members/josh/mouse_csection/workspace:/home/rstudio/mouse_csection/workspace \
+#        -v /mnt/hts_scratch/Members/josh/mouse_csection/raw_data:/home/rstudio/mouse_csection/raw_data \
+#        --name rstudio_qiime_bash \
+#        granek/rstudio_qiime:v4 \
+#        /bin/bash
+
+##--------------------------------------------------
+## in docker run the following
+# cd /home/rstudio/mouse_csection/
+# make --dry-run fastqs -j4 -f analyze_culture_sequences.mk --warn-undefined-variables NUMTHREADS=4 RAW_DATA_DIR=/home/rstudio/mouse_csection/raw_data
+##--------------------------------------------------
