@@ -20,7 +20,7 @@ cn.df = read_excel(eve.excelfile, sheet = 1,
                                    "numeric", "numeric")) %>%
   filter(!is.na(crz1D_logFC))
 
-
+##-----------------------------------------------------------------------------
 #+ load_af_data, echo=TRUE
 af_ca_up.df = read_excel(eve.excelfile, sheet = 2, col_names = c("gene"), skip=1) %>%
   mutate(gene=str_trim(gene))
@@ -31,7 +31,6 @@ af_ca_down.df = read_excel(eve.excelfile, sheet = 3, col_names = c("gene"), skip
   mutate(gene=str_trim(gene))
 head(af_ca_down.df)
 tail(af_ca_down.df)
-
 
 af_crz_down.df = read_excel(eve.excelfile, sheet = 4, col_names = c("gene"), skip=1) %>%
   mutate(gene=str_trim(gene)) %>%
@@ -49,6 +48,7 @@ af_crz_up.df = read_excel(eve.excelfile, sheet = 5, col_names = c("gene"), skip=
 head(af_crz_up.df)
 tail(af_crz_up.df)
 
+##-----------------------------------------------------------------------------
 #+ load_sc_data, echo=TRUE
 sc_cna_ca.df = read_excel(eve.excelfile, sheet = 6, col_names = c("gene"), skip=2) %>%
   mutate(gene=str_extract(gene, pattern="\\w+")) %>% 
@@ -66,6 +66,7 @@ sc_cna_ca_na.df = read_excel(eve.excelfile, sheet = 7, col_names = c("gene"), sk
 head(sc_cna_ca_na.df)
 tail(sc_cna_ca_na.df)
 
+##-----------------------------------------------------------------------------
 #+ # Validate Gene Lists
 ortholog_data_dir= "rewiring_analysis/ortholog_tables/"
 list.files(ortholog_data_dir)
@@ -111,3 +112,54 @@ rm(sc.allgenes)
 # head(af_ca_up.df)
 # af_crz_up.df[which(af_crz_up.df$gene %in% af.allgenes[,1]),]
 # dim(af_crz_up.df)
+
+##-----------------------------------------------------------------------------
+list.files("rewiring_analysis/ortholog_tables/")
+
+cn_af_ortho.df = read.delim(file.path(ortholog_data_dir,"h99_afumigatus_orthologs.tsv"),
+                            stringsAsFactors = FALSE) %>%
+                              transmute(gene=X.Gene.ID.,
+                                        ortholog=X.Input.Ortholog.s..,
+                                        paralog_count=X.Paralog.count.,
+                                        ortholog_count=X.Ortholog.count.)
+
+#+ eliminate_multiple_mappings
+# head(cn_af_ortho.df)
+# sum(duplicated(cn_af_ortho.df$ortholog))
+# head(cn_af_ortho.df[duplicated(cn_af_ortho.df$ortholog),])
+
+# head(cn_af_ortho.df$ortholog)
+# all_cn_orthos = unlist(str_split(cn_af_ortho.df$ortholog,","))
+# all_cn_orthos.dups = all_cn_orthos[duplicated(all_cn_orthos)]
+# ortho_pattern = paste(all_cn_orthos.dups,collapse = "|")
+# 
+# # cn_af.nodups = cn_af_ortho.df %>% 
+# #   mutate(dups = str_detect(ortholog, ortho_pattern)) %>%
+# #   mutate(comma = str_detect(ortholog, ",")) %>%
+# #   filter(dups) %>%
+# #   filter(comma)
+# # range(cn_af.nodups$paralog_count)
+# 
+# cn_af.nodups1 = cn_af_ortho.df %>% 
+#   filter(!str_detect(ortholog, ortho_pattern)) %>%
+#   filter(!str_detect(ortholog, ","))
+#   
+# range(cn_af.nodups$paralog_count)
+# 
+# cn_af.nodups2 = cn_af_ortho.df %>% 
+#   filter(paralog_count == 0) %>%
+#   filter(!str_detect(ortholog, ","))
+# 
+# cn_af.nodups3 = cn_af_ortho.df %>% 
+#   filter(!str_detect(ortholog, ortho_pattern))
+# 
+# 
+# all.equal(cn_af.nodups3, cn_af.nodups2)
+# 
+# length(all_cn_orthos[duplicated(all_cn_orthos)])
+
+cn_af.nodups = cn_af_ortho.df %>%
+  filter(paralog_count == 0) %>%
+  filter(!str_detect(ortholog, ","))
+
+
