@@ -12,9 +12,10 @@ library(knitr)
 #+ Setup: Setup Paths, include=FALSE
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 getwd()
-expression_data_dir= "fold_change_tables/"
+expression_data_dir= "fold_change_tables"
 eve.excelfile = file.path(expression_data_dir,
                           "Gene datasets for A fumigatus and S cerevisiae Crz1 genes.xlsx")
+ortholog_data_dir= "ortholog_tables"
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #+ Setup: Load C. neoformans data from excel, include=FALSE
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -30,20 +31,13 @@ cn.df = read_excel(eve.excelfile, sheet = 1,
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 af_ca_up.df = read_excel(eve.excelfile, sheet = 2, col_names = c("gene"), skip=1) %>%
   mutate(gene=str_trim(gene))
-head(af_ca_up.df)
-tail(af_ca_up.df)
 
 af_ca_down.df = read_excel(eve.excelfile, sheet = 3, col_names = c("gene"), skip=1)  %>%
   mutate(gene=str_trim(gene))
-head(af_ca_down.df)
-tail(af_ca_down.df)
 
 af_crz_down.df = read_excel(eve.excelfile, sheet = 4, col_names = c("gene"), skip=1) %>%
   mutate(gene=str_trim(gene)) %>%
   mutate(gene=str_replace(gene,"Afu2g05330","Afu2g05325")) 
-
-head(af_crz_down.df)
-tail(af_crz_down.df)
 
 af.unknown.genes = c("Afu6g12810","Afu6g11860","Afu1g00190","Afu2g07390")
 af_crz_up.df = read_excel(eve.excelfile, sheet = 5, col_names = c("gene"), skip=1)  %>%
@@ -84,19 +78,11 @@ sc_cna_ca.df = read_excel(eve.excelfile, sheet = 6, col_names = c("gene"), skip=
   mutate(gene=str_replace(gene,"YMB304C","YMR304C-A")) %>%
   filter(!gene %in% c("YNL043C","YMR007W","YPR197C","YMR304C-A","YDL011C","YDL172C","YPR170C")) # remove genes not in FungiDB
 
-head(sc_cna_ca.df)
-tail(sc_cna_ca.df)
-
 sc_cna_ca_na.df = read_excel(eve.excelfile, sheet = 7, col_names = c("gene"), skip=2) %>%
   filter(!gene %in% c("YDR535C","YGL165C")) # remove genes not in FungiDB
 
-head(sc_cna_ca_na.df)
-tail(sc_cna_ca_na.df)
-
 ##-----------------------------------------------------------------------------
 #+ # Validate Gene Lists
-ortholog_data_dir= "ortholog_tables/"
-list.files(ortholog_data_dir)
 
 #+ ## Validate Af Gene Lists
 af.allgenes = read.delim(file.path(ortholog_data_dir,"afumigatus_all_genes.tsv"),
@@ -120,26 +106,6 @@ all(sc_cna_ca.df$gene %in% sc.allgenes[,1])
 all(sc_cna_ca_na.df$gene %in% sc.allgenes[,1])
 rm(sc.allgenes)
 
-# head(sc_cna_ca.df)
-# head(sc_cna_ca_na.df)
-# all(sc_cna_ca.df$gene %in% sc.allgenes[,1])
-# sc_cna_ca.df$gene %in% sc.allgenes[,1]
-# sc_cna_ca.df[which(!sc_cna_ca.df$gene %in% sc.allgenes[,1]),]
-# which(!sc_cna_ca.df$gene %in% sc.allgenes[,1])
-
-
-rm(sc.allgenes)
-
-# af_crz_up.df$gene[which(not(af_crz_up.df$gene %in% af.allgenes[,1]))]
-# 
-# af_ca_down.df
-# 
-# head(af.allgenes[,1])
-# head(af_ca_up.df$gene)
-# head(af_ca_up.df)
-# af_crz_up.df[which(af_crz_up.df$gene %in% af.allgenes[,1]),]
-# dim(af_crz_up.df)
-
 ##-----------------------------------------------------------------------------
 list.files("rewiring_analysis/ortholog_tables/")
 
@@ -149,41 +115,6 @@ cn_af_ortho.df = read.delim(file.path(ortholog_data_dir,"h99_afumigatus_ortholog
                                         ortholog=X.Input.Ortholog.s..,
                                         paralog_count=X.Paralog.count.,
                                         ortholog_count=X.Ortholog.count.)
-
-#+ Af-Cn eliminate_multiple_mappings
-# head(cn_af_ortho.df)
-# sum(duplicated(cn_af_ortho.df$ortholog))
-# head(cn_af_ortho.df[duplicated(cn_af_ortho.df$ortholog),])
-
-# head(cn_af_ortho.df$ortholog)
-# all_cn_orthos = unlist(str_split(cn_af_ortho.df$ortholog,","))
-# all_cn_orthos.dups = all_cn_orthos[duplicated(all_cn_orthos)]
-# ortho_pattern = paste(all_cn_orthos.dups,collapse = "|")
-# 
-# # cn_af.nodups = cn_af_ortho.df %>% 
-# #   mutate(dups = str_detect(ortholog, ortho_pattern)) %>%
-# #   mutate(comma = str_detect(ortholog, ",")) %>%
-# #   filter(dups) %>%
-# #   filter(comma)
-# # range(cn_af.nodups$paralog_count)
-# 
-# cn_af.nodups1 = cn_af_ortho.df %>% 
-#   filter(!str_detect(ortholog, ortho_pattern)) %>%
-#   filter(!str_detect(ortholog, ","))
-#   
-# range(cn_af.nodups$paralog_count)
-# 
-# cn_af.nodups2 = cn_af_ortho.df %>% 
-#   filter(paralog_count == 0) %>%
-#   filter(!str_detect(ortholog, ","))
-# 
-# cn_af.nodups3 = cn_af_ortho.df %>% 
-#   filter(!str_detect(ortholog, ortho_pattern))
-# 
-# 
-# all.equal(cn_af.nodups3, cn_af.nodups2)
-# 
-# length(all_cn_orthos[duplicated(all_cn_orthos)])
 
 cn_af.nodups = cn_af_ortho.df %>%
   filter(paralog_count == 0) %>%
@@ -197,9 +128,6 @@ cn_af.nodups %>%
 
 cn_af.nodups %>% 
   filter(ortholog %in% cn.df$gene)
-
-
-head(cn.df )
 ##-----------------------------------------------------------------------------
 #+ Sc-Cn eliminate_multiple_mappings
 list.files("rewiring_analysis/ortholog_tables/")
@@ -218,9 +146,6 @@ cn_sc.nodups = cn_sc_ortho.df %>%
 ##-----------------------------------------------------------------------------
 #+ explore Sc-Cn overlapping genes
 sc_genes = c(sc_cna_ca.df$gene, sc_cna_ca_na.df)
-# sc_cna_ca_na.df$gene
-# dim(sc_cna_ca_na.df)
-# dim(sc_cna_ca.df)
 
 cn_sc.nodups %>% 
   filter(gene %in% sc_genes) %>%
@@ -229,19 +154,9 @@ cn_sc.nodups %>%
 cn_af.nodups %>% 
   filter(ortholog %in% cn.df$gene)
 
-
-head(cn.df )
-
 ##-----------------------------------------------------------------------------
 #+ Separate Cn-Sc paralogs into separate rows
-head(cn_sc_ortho.df)
 cn_sc_ortho.sep.df = cn_sc_ortho.df %>% separate_rows(ortholog,sep=",")
-dim(cn_sc_ortho.df)
-dim(cn_sc_ortho.sep.df)
-
-cn_sc_ortho.df %>% filter(str_detect(ortholog, ",")) %>% head
-
-cn_sc_ortho.sep.df %>% filter(gene == "YAL005C")
 
 ##-----------------------------------------------------------------------------
 #+ explore Cn-Sc overlapping genes
@@ -321,19 +236,10 @@ RunSamplingAnalysis = function(a_genes, b_genes, ortho_table,
             b_species, ":",
             num_overlap_genes), fill=TRUE)
   
-  # print(replicate(10,SampleFunc))
-  # x = SampleFunc(a_genes = a_orthologs, 
-  #                b_genes = b_orthologs,
-  #                a_gene_n = a_num_genes_with_ortholog,
-  #                b_gene_n = b_num_genes_with_ortholog,
-  #                map_table = map_table)
-  # print(x)
   y = RepWrap(num_samples, a_genes = a_orthologs, b_genes = b_orthologs,
               a_gene_n = a_num_genes_with_ortholog,
               b_gene_n = b_num_genes_with_ortholog,
               map_table = map_table)
-  # print(y)
-  # print(y > num_overlap_genes)
   sample_prob = mean(y >= num_overlap_genes)
 
   cat(paste("Probability of finding number of shared regulated genes in", a_species, "and",
