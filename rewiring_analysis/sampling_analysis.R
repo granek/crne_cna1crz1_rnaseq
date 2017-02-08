@@ -1,19 +1,23 @@
-library("readxl")
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#+ Setup: Load Libraries, include=FALSE
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+library(readxl)
 library(dplyr)
 library(magrittr)
 library(stringr)
 library(tidyr)
+library(knitr)
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#+ Setup: Setup Paths, include=FALSE
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 getwd()
 expression_data_dir= "fold_change_tables/"
-list.files(expression_data_dir)
-
 eve.excelfile = file.path(expression_data_dir,
                           "Gene datasets for A fumigatus and S cerevisiae Crz1 genes.xlsx")
-
-
-##-----------------------------------------------------------------------------
-#+ load_cn_data, echo=TRUE
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#+ Setup: Load C. neoformans data from excel, include=FALSE
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cn.df = read_excel(eve.excelfile, sheet = 1, 
                      col_names = c("gene", "crz1D_logFC", "crz1D_padj", 
                                    "cna1D_logFC", "cna1D_padj"),
@@ -21,8 +25,9 @@ cn.df = read_excel(eve.excelfile, sheet = 1,
                                    "numeric", "numeric")) %>%
   filter(!is.na(crz1D_logFC))
 
-##-----------------------------------------------------------------------------
-#+ load_af_data, echo=TRUE
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#+ Setup: A. fumigatus data from excel, include=FALSE
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 af_ca_up.df = read_excel(eve.excelfile, sheet = 2, col_names = c("gene"), skip=1) %>%
   mutate(gene=str_trim(gene))
 head(af_ca_up.df)
@@ -36,18 +41,39 @@ tail(af_ca_down.df)
 af_crz_down.df = read_excel(eve.excelfile, sheet = 4, col_names = c("gene"), skip=1) %>%
   mutate(gene=str_trim(gene)) %>%
   mutate(gene=str_replace(gene,"Afu2g05330","Afu2g05325")) 
-## "Afu2g05330" is a previous ID for "Afu2g05325", as per
-## http://fungidb.org/fungidb/app/record/gene/Afu2g05325
+
 head(af_crz_down.df)
 tail(af_crz_down.df)
 
+af.unknown.genes = c("Afu6g12810","Afu6g11860","Afu1g00190","Afu2g07390")
 af_crz_up.df = read_excel(eve.excelfile, sheet = 5, col_names = c("gene"), skip=1)  %>%
   mutate(gene=str_trim(gene)) %>%
-  filter(!gene %in% c("Afu6g12810","Afu6g11860","Afu1g00190","Afu2g07390"))
-# Afu6g12810, Afu6g11860, Afu1g00190, and Afu2g07390 do not appear in FungiDB
+  filter(!gene %in% af.unknown.genes)
 
-head(af_crz_up.df)
-tail(af_crz_up.df)
+af_counts.df = data_frame(
+  data_set= c(
+    "Up-regulated by Ca in WT",
+    "Down-regulated by Ca in WT",
+    "Up-regulated by Ca in crzA mutant",
+    "Down-regulated by Ca in crzA mutant"),
+  gene_counts = c(nrow(af_ca_up.df),
+                  nrow(af_ca_down.df),
+                  nrow(af_crz_up.df),
+                  nrow(af_crz_down.df)))
+
+#' ## Loading *A. fumigatus* differentially expressed genes
+#' Renamed 'Afu2g05330' to 'Afu2g05325', since  'Afu2g05330' is a previous ID 
+#' for "Afu2g05325", according to the 
+#' [FungiDB record for Afu2g05325](http://fungidb.org/fungidb/app/record/gene/Afu2g05325)
+#' 
+#' Removed the following genes from *A. fumigatus* differentially expressed gene set
+#' because they do not appear in FungiDB, and all are listed as 
+#' "hypothetical protein" in Soriani paper: `r af.unknown.genes`
+
+#' Number of differentially expressed genes in each set 
+#' (after removing 'unknown' genes):
+#' `r kable(af_counts.df)`
+
 
 ##-----------------------------------------------------------------------------
 #+ load_sc_data, echo=TRUE
