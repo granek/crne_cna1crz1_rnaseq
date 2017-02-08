@@ -298,20 +298,20 @@ RunSamplingAnalysis = function(a_genes, b_genes, ortho_table, a_species, b_speci
   
   
   cat(paste("Orthologs between", a_species, "and", b_species,
-      ":", nrow(ortho_table)), fill=TRUE)
+            ":", nrow(ortho_table), "\n"), fill=TRUE)
   cat(paste("Differentially regulated genes in", a_species, ":", 
             num_a_genes), fill=TRUE)
   cat(paste("Number of regulated genes in", a_species, "with ortholog in",
             b_species, ":",
-            num_a_genes_with_ortholog), fill=TRUE)
+            num_a_genes_with_ortholog, "\n"), fill=TRUE)
 
   cat(paste("Differentially regulated genes in", b_species, ":", 
             num_b_genes), fill=TRUE)
   cat(paste("Number of regulated genes in", b_species, "with ortholog in",
             a_species, ":",
-            num_b_genes_with_ortholog), fill=TRUE)
-  cat(paste("Number of common regulated genes between", a_species, "and",
-            a_species, ":",
+            num_b_genes_with_ortholog,"\n"), fill=TRUE)
+  cat(paste("Number of shared regulated genes between", a_species, "and",
+            b_species, ":",
             num_overlap_genes), fill=TRUE)
 }
 
