@@ -278,6 +278,45 @@ cn_af_ortho.sep.df %>%
 cn_af.nodups %>% 
   filter(gene %in% af_crz.genes) %>%
   filter(ortholog %in% cn.df$gene)
+
+
+RunSamplingAnalysis = function(a_genes, b_genes, ortho_table, a_species, b_species){
+  num_a_genes = length(a_genes)
+  num_a_genes_with_ortholog = ortho_table %>% 
+    filter(gene %in% a_genes) %>% 
+    nrow
+  
+  num_b_genes = length(b_genes)
+  num_b_genes_with_ortholog = ortho_table %>% 
+    filter(ortholog %in% b_genes) %>% 
+    nrow
+  
+  num_overlap_genes = ortho_table %>% 
+    filter(gene %in% a_genes) %>% 
+    filter(ortholog %in% b_genes) %>% 
+    nrow
+  
+  
+  cat(paste("Orthologs between", a_species, "and", b_species,
+      ":", nrow(ortho_table)), fill=TRUE)
+  cat(paste("Differentially regulated genes in", a_species, ":", 
+            num_a_genes), fill=TRUE)
+  cat(paste("Number of regulated genes in", a_species, "with ortholog in",
+            b_species, ":",
+            num_a_genes_with_ortholog), fill=TRUE)
+
+  cat(paste("Differentially regulated genes in", b_species, ":", 
+            num_b_genes), fill=TRUE)
+  cat(paste("Number of regulated genes in", b_species, "with ortholog in",
+            a_species, ":",
+            num_b_genes_with_ortholog), fill=TRUE)
+  cat(paste("Number of common regulated genes between", a_species, "and",
+            a_species, ":",
+            num_overlap_genes), fill=TRUE)
+}
+
+RunSamplingAnalysis(af_crz.genes, cn.df$gene, cn_af_ortho.sep.df, 
+                    "A. fumigatus", "C. neoformans")
 #'******************************************************************************
 #' # Further Analyses
 #+ Todo List, include=FALSE
