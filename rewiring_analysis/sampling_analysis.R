@@ -2,6 +2,7 @@ library("readxl")
 library(dplyr)
 library(magrittr)
 library(stringr)
+library(tidyr)
 
 getwd()
 expression_data_dir= "rewiring_analysis/fold_change_tables/"
@@ -11,7 +12,7 @@ eve.excelfile = file.path(expression_data_dir,
                           "Gene datasets for A fumigatus and S cerevisiae Crz1 genes.xlsx")
 
 
-
+##-----------------------------------------------------------------------------
 #+ load_cn_data, echo=TRUE
 cn.df = read_excel(eve.excelfile, sheet = 1, 
                      col_names = c("gene", "crz1D_logFC", "crz1D_padj", 
@@ -123,7 +124,7 @@ cn_af_ortho.df = read.delim(file.path(ortholog_data_dir,"h99_afumigatus_ortholog
                                         paralog_count=X.Paralog.count.,
                                         ortholog_count=X.Ortholog.count.)
 
-#+ eliminate_multiple_mappings
+#+ Af-Cn eliminate_multiple_mappings
 # head(cn_af_ortho.df)
 # sum(duplicated(cn_af_ortho.df$ortholog))
 # head(cn_af_ortho.df[duplicated(cn_af_ortho.df$ortholog),])
@@ -161,5 +162,94 @@ cn_af_ortho.df = read.delim(file.path(ortholog_data_dir,"h99_afumigatus_ortholog
 cn_af.nodups = cn_af_ortho.df %>%
   filter(paralog_count == 0) %>%
   filter(!str_detect(ortholog, ","))
+##-----------------------------------------------------------------------------
+#+ explore Af-Cn overlapping genes
+af_ca.genes = c(af_ca_up.df$gene, af_ca_down.df$gene)
+cn_af.nodups %>% 
+  filter(gene %in% af_ca.genes) %>%
+  filter(ortholog %in% cn.df$gene)
 
+cn_af.nodups %>% 
+  filter(ortholog %in% cn.df$gene)
+
+
+head(cn.df )
+##-----------------------------------------------------------------------------
+#+ Sc-Cn eliminate_multiple_mappings
+list.files("rewiring_analysis/ortholog_tables/")
+
+cn_sc_ortho.df = read.delim(file.path(ortholog_data_dir,"h99_scerevisiae_orthologs.tsv"),
+                            stringsAsFactors = FALSE) %>%
+  transmute(gene=X.Gene.ID.,
+            ortholog=X.Input.Ortholog.s..,
+            paralog_count=X.Paralog.count.,
+            ortholog_count=X.Ortholog.count.)
+
+cn_sc.nodups = cn_sc_ortho.df %>%
+  filter(paralog_count == 0) %>%
+  filter(!str_detect(ortholog, ","))
+
+##-----------------------------------------------------------------------------
+#+ explore Af-Cn overlapping genes
+sc_genes = c(sc_cna_ca.df$gene, sc_cna_ca_na.df)
+# sc_cna_ca_na.df$gene
+# dim(sc_cna_ca_na.df)
+# dim(sc_cna_ca.df)
+
+cn_sc.nodups %>% 
+  filter(gene %in% sc_genes) %>%
+  filter(ortholog %in% cn.df$gene)
+
+cn_af.nodups %>% 
+  filter(ortholog %in% cn.df$gene)
+
+
+head(cn.df )
+
+##-----------------------------------------------------------------------------
+#+ Separate Cn-Sc paralogs into separate rows
+head(cn_sc_ortho.df)
+cn_sc_ortho.sep.df = cn_sc_ortho.df %>% separate_rows(ortholog,sep=",")
+dim(cn_sc_ortho.df)
+dim(cn_sc_ortho.sep.df)
+
+cn_sc_ortho.df %>% filter(str_detect(ortholog, ",")) %>% head
+
+cn_sc_ortho.sep.df %>% filter(gene == "YAL005C")
+
+##-----------------------------------------------------------------------------
+#+ explore Cn-Sc overlapping genes
+cn_sc_ortho.sep.df %>% 
+  filter(gene %in% sc_genes) %>%
+  filter(ortholog %in% cn.df$gene)
+
+cn_sc_ortho.sep.df %>% 
+  filter(gene %in% sc_genes) %>% dim
+
+cn_sc_ortho.sep.df %>% 
+  filter(ortholog %in% cn.df$gene) %>% dim
+
+##-----------------------------------------------------------------------------
+##-----------------------------------------------------------------------------
+##-----------------------------------------------------------------------------
+##-----------------------------------------------------------------------------
+##-----------------------------------------------------------------------------
+#+ Separate Af-Cn paralogs into separate rows
+cn_af_ortho.sep.df = cn_af_ortho.df %>% separate_rows(ortholog,sep=",")
+dim(cn_af_ortho.df)
+dim(cn_af_ortho.sep.df)
+
+cn_af_ortho.df %>% filter(str_detect(ortholog, ",")) %>% head
+
+cn_af_ortho.sep.df %>% filter(ortholog == "CNAG_00688")
+##-----------------------------------------------------------------------------
+#+ explore Af-Cn overlapping genes redux
+af_crz.genes = c(af_crz_up.df$gene, af_crz_down.df$gene)
+cn_af_ortho.sep.df %>% 
+  filter(gene %in% af_crz.genes) %>%
+  filter(ortholog %in% cn.df$gene)
+
+cn_af.nodups %>% 
+  filter(gene %in% af_crz.genes) %>%
+  filter(ortholog %in% cn.df$gene)
 
