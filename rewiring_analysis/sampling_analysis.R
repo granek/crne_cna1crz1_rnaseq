@@ -281,13 +281,13 @@ cn_af.nodups %>%
 
 
 RunSamplingAnalysis = function(a_genes, b_genes, ortho_table, a_species, b_species){
-  num_a_genes = length(a_genes)
-  num_a_genes_with_ortholog = ortho_table %>% 
+  a_num_genes = length(a_genes)
+  a_num_genes_with_ortholog = ortho_table %>% 
     filter(gene %in% a_genes) %>% 
     nrow
   
-  num_b_genes = length(b_genes)
-  num_b_genes_with_ortholog = ortho_table %>% 
+  b_num_genes = length(b_genes)
+  b_num_genes_with_ortholog = ortho_table %>% 
     filter(ortholog %in% b_genes) %>% 
     nrow
   
@@ -296,24 +296,70 @@ RunSamplingAnalysis = function(a_genes, b_genes, ortho_table, a_species, b_speci
     filter(ortholog %in% b_genes) %>% 
     nrow
   
+  a_orthologs = unique(ortho_table$gene)
+  b_orthologs = unique(ortho_table$ortholog)
+  map_table = ortho_table %>%
+    transmute(a = gene,
+              b = ortholog)
+  
   
   cat(paste("Orthologs between", a_species, "and", b_species,
             ":", nrow(ortho_table), "\n"), fill=TRUE)
   cat(paste("Differentially regulated genes in", a_species, ":", 
-            num_a_genes), fill=TRUE)
+            a_num_genes), fill=TRUE)
   cat(paste("Number of regulated genes in", a_species, "with ortholog in",
             b_species, ":",
-            num_a_genes_with_ortholog, "\n"), fill=TRUE)
+            a_num_genes_with_ortholog, "\n"), fill=TRUE)
 
   cat(paste("Differentially regulated genes in", b_species, ":", 
-            num_b_genes), fill=TRUE)
+            b_num_genes), fill=TRUE)
   cat(paste("Number of regulated genes in", b_species, "with ortholog in",
             a_species, ":",
-            num_b_genes_with_ortholog,"\n"), fill=TRUE)
+            b_num_genes_with_ortholog,"\n"), fill=TRUE)
   cat(paste("Number of shared regulated genes between", a_species, "and",
             b_species, ":",
             num_overlap_genes), fill=TRUE)
+  
+  # print(replicate(10,SampleFunc))
+  x = SampleFunc(a_genes = a_orthologs, 
+                 b_genes = b_orthologs,
+                 a_gene_n = a_num_genes_with_ortholog,
+                 b_gene_n = b_num_genes_with_ortholog,
+                 map_table = map_table)
+  print(x)
+  y = RepWrap(100, a_genes = a_orthologs, b_genes = b_orthologs,
+              a_gene_n = a_num_genes_with_ortholog,
+              b_gene_n = b_num_genes_with_ortholog,
+              map_table = map_table)
+  print(y)
+  
 }
+
+SampleFunc = function(a_genes, b_genes, a_gene_n, b_gene_n, map_table){
+  a_samp = sample(a_genes,a_gene_n)
+  b_samp = sample(b_genes,b_gene_n)
+  samp_overlap = map_table %>%
+    filter(a %in% a_samp) %>%
+    filter(b %in% b_samp) %>%
+    nrow
+  return(samp_overlap)
+}
+RepWrap = function(n, a_genes, b_genes, a_gene_n, b_gene_n, map_table) {
+  replicate(n, SampleFunc(a_genes=a_genes, b_genes=b_genes, 
+                          a_gene_n=a_gene_n, b_gene_n=b_gene_n, 
+                          map_table=map_table))
+}
+
+# SampleFunc = function(a_gene_vec, b_gene_vec, ){
+#   a_samp = sample(a_orthologs,a_num_genes_with_ortholog)
+#   b_samp = sample(b_orthologs,b_num_genes_with_ortholog)
+#   samp_overlap = ortho_table %>% 
+#     filter(gene %in% a_samp) %>% 
+#     filter(ortholog %in% b_samp) %>% 
+#     nrow
+#   return(samp_overlap)
+# }
+
 
 RunSamplingAnalysis(af_crz.genes, cn.df$gene, cn_af_ortho.sep.df, 
                     "A. fumigatus", "C. neoformans")
