@@ -280,7 +280,8 @@ cn_af.nodups %>%
   filter(ortholog %in% cn.df$gene)
 
 
-RunSamplingAnalysis = function(a_genes, b_genes, ortho_table, a_species, b_species){
+RunSamplingAnalysis = function(a_genes, b_genes, ortho_table, 
+                               a_species, b_species,num_samples=100){
   a_num_genes = length(a_genes)
   a_num_genes_with_ortholog = ortho_table %>% 
     filter(gene %in% a_genes) %>% 
@@ -321,18 +322,24 @@ RunSamplingAnalysis = function(a_genes, b_genes, ortho_table, a_species, b_speci
             num_overlap_genes), fill=TRUE)
   
   # print(replicate(10,SampleFunc))
-  x = SampleFunc(a_genes = a_orthologs, 
-                 b_genes = b_orthologs,
-                 a_gene_n = a_num_genes_with_ortholog,
-                 b_gene_n = b_num_genes_with_ortholog,
-                 map_table = map_table)
-  print(x)
-  y = RepWrap(100, a_genes = a_orthologs, b_genes = b_orthologs,
+  # x = SampleFunc(a_genes = a_orthologs, 
+  #                b_genes = b_orthologs,
+  #                a_gene_n = a_num_genes_with_ortholog,
+  #                b_gene_n = b_num_genes_with_ortholog,
+  #                map_table = map_table)
+  # print(x)
+  y = RepWrap(num_samples, a_genes = a_orthologs, b_genes = b_orthologs,
               a_gene_n = a_num_genes_with_ortholog,
               b_gene_n = b_num_genes_with_ortholog,
               map_table = map_table)
-  print(y)
-  
+  # print(y)
+  # print(y > num_overlap_genes)
+  sample_prob = mean(y >= num_overlap_genes)
+
+  cat(paste("Probability of finding number of shared regulated genes in", a_species, "and",
+            b_species, ":",
+            sample_prob), fill=TRUE)
+  cat(paste0(rep("-", 60),collapse=""),fill=TRUE)
 }
 
 SampleFunc = function(a_genes, b_genes, a_gene_n, b_gene_n, map_table){
@@ -350,19 +357,17 @@ RepWrap = function(n, a_genes, b_genes, a_gene_n, b_gene_n, map_table) {
                           map_table=map_table))
 }
 
-# SampleFunc = function(a_gene_vec, b_gene_vec, ){
-#   a_samp = sample(a_orthologs,a_num_genes_with_ortholog)
-#   b_samp = sample(b_orthologs,b_num_genes_with_ortholog)
-#   samp_overlap = ortho_table %>% 
-#     filter(gene %in% a_samp) %>% 
-#     filter(ortholog %in% b_samp) %>% 
-#     nrow
-#   return(samp_overlap)
-# }
-
-
 RunSamplingAnalysis(af_crz.genes, cn.df$gene, cn_af_ortho.sep.df, 
-                    "A. fumigatus", "C. neoformans")
+                    "A. fumigatus", "C. neoformans",num_samples=1000)
+
+RunSamplingAnalysis(af_crz.genes, cn.df$gene, cn_af.nodups, 
+                    "A. fumigatus", "C. neoformans",num_samples=1000)
+
+RunSamplingAnalysis(sc_genes, cn.df$gene, cn_sc_ortho.sep.df,
+                    "S. cerevisiae", "C. neoformans",num_samples=1000)
+
+RunSamplingAnalysis(sc_genes, cn.df$gene, cn_sc.nodups,
+                    "S. cerevisiae", "C. neoformans",num_samples=1000)
 #'******************************************************************************
 #' # Further Analyses
 #+ Todo List, include=FALSE
