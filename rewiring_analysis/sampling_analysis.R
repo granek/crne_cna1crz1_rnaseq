@@ -5,7 +5,7 @@ library(stringr)
 library(tidyr)
 
 getwd()
-expression_data_dir= "rewiring_analysis/fold_change_tables/"
+expression_data_dir= "fold_change_tables/"
 list.files(expression_data_dir)
 
 eve.excelfile = file.path(expression_data_dir,
@@ -69,7 +69,7 @@ tail(sc_cna_ca_na.df)
 
 ##-----------------------------------------------------------------------------
 #+ # Validate Gene Lists
-ortholog_data_dir= "rewiring_analysis/ortholog_tables/"
+ortholog_data_dir= "ortholog_tables/"
 list.files(ortholog_data_dir)
 
 #+ ## Validate Af Gene Lists
@@ -190,7 +190,7 @@ cn_sc.nodups = cn_sc_ortho.df %>%
   filter(!str_detect(ortholog, ","))
 
 ##-----------------------------------------------------------------------------
-#+ explore Af-Cn overlapping genes
+#+ explore Sc-Cn overlapping genes
 sc_genes = c(sc_cna_ca.df$gene, sc_cna_ca_na.df)
 # sc_cna_ca_na.df$gene
 # dim(sc_cna_ca_na.df)
@@ -252,4 +252,19 @@ cn_af_ortho.sep.df %>%
 cn_af.nodups %>% 
   filter(gene %in% af_crz.genes) %>%
   filter(ortholog %in% cn.df$gene)
+#'******************************************************************************
+#' # Further Analyses
+#+ Todo List, include=FALSE
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#' 1. One
+#'     + sub1
+#'     + sub2
+#' 1. Two
 
+#--------------------------------------------------
+#'****************************************************************************
+#' # Session Info
+#--------------------------------------------------
+#+ Session Info, echo=FALSE
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+sessionInfo()
