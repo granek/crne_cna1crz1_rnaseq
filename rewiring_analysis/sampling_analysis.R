@@ -196,7 +196,10 @@ cn_af.nodups %>%
 
 
 RunSamplingAnalysis = function(a_genes, b_genes, ortho_table, 
-                               a_species, b_species,num_samples=100){
+                               a_species, b_species,num_samples=100,seed=NULL){
+  if(!is.null(seed)){
+    set.seed(seed)
+  }
   a_num_genes = length(a_genes)
   a_num_genes_with_ortholog = ortho_table %>% 
     filter(gene %in% a_genes) %>% 
@@ -264,16 +267,16 @@ RepWrap = function(n, a_genes, b_genes, a_gene_n, b_gene_n, map_table) {
 }
 
 RunSamplingAnalysis(af_crz.genes, cn.df$gene, cn_af_ortho.sep.df, 
-                    "A. fumigatus", "C. neoformans",num_samples=1000)
+                    "A. fumigatus", "C. neoformans",num_samples=1000,seed=1)
 
 RunSamplingAnalysis(af_crz.genes, cn.df$gene, cn_af.nodups, 
-                    "A. fumigatus", "C. neoformans",num_samples=1000)
+                    "A. fumigatus", "C. neoformans",num_samples=1000,seed=2)
 
 RunSamplingAnalysis(sc_genes, cn.df$gene, cn_sc_ortho.sep.df,
-                    "S. cerevisiae", "C. neoformans",num_samples=1000)
+                    "S. cerevisiae", "C. neoformans",num_samples=1000,seed=3)
 
 RunSamplingAnalysis(sc_genes, cn.df$gene, cn_sc.nodups,
-                    "S. cerevisiae", "C. neoformans",num_samples=1000)
+                    "S. cerevisiae", "C. neoformans",num_samples=1000,seed=4)
 #'******************************************************************************
 #' # Further Analyses
 #+ Todo List, include=FALSE
