@@ -174,7 +174,7 @@ cn_sc.nodups = cn_sc_ortho.df %>%
 
 ##-----------------------------------------------------------------------------
 #+ explore Sc-Cn overlapping genes
-sc_genes = c(sc_cna_ca.df$gene, sc_cna_ca_na.df)
+sc_genes = c(sc_cna_ca.df$gene, sc_cna_ca_na.df$gene)
 
 # cn_sc.nodups %>% 
 #   filter(gene %in% sc_genes) %>%
