@@ -269,14 +269,14 @@ RepWrap = function(n, a_genes, b_genes, a_gene_n, b_gene_n, map_table) {
 RunSamplingAnalysis(af_crz.genes, cn.df$gene, cn_af_ortho.sep.df, 
                     "A. fumigatus", "C. neoformans",num_samples=1000,seed=1)
 
-RunSamplingAnalysis(af_crz.genes, cn.df$gene, cn_af.nodups, 
-                    "A. fumigatus", "C. neoformans",num_samples=1000,seed=2)
+# RunSamplingAnalysis(af_crz.genes, cn.df$gene, cn_af.nodups, 
+#                     "A. fumigatus", "C. neoformans",num_samples=1000,seed=2)
 
 RunSamplingAnalysis(sc_genes, cn.df$gene, cn_sc_ortho.sep.df,
                     "S. cerevisiae", "C. neoformans",num_samples=1000,seed=3)
 
-RunSamplingAnalysis(sc_genes, cn.df$gene, cn_sc.nodups,
-                    "S. cerevisiae", "C. neoformans",num_samples=1000,seed=4)
+# RunSamplingAnalysis(sc_genes, cn.df$gene, cn_sc.nodups,
+#                     "S. cerevisiae", "C. neoformans",num_samples=1000,seed=4)
 #'******************************************************************************
 #' # Further Analyses
 #+ Todo List, include=FALSE
