@@ -1,0 +1,22 @@
+Orthologs between A. fumigatus and C. neoformans : 5450 
+
+Differentially regulated genes in A. fumigatus : 137
+Number of regulated genes in A. fumigatus with ortholog in C. neoformans : 78 
+
+Differentially regulated genes in C. neoformans : 102
+Number of regulated genes in C. neoformans with ortholog in A. fumigatus : 56 
+
+Number of shared regulated genes between A. fumigatus and C. neoformans : 6
+Probability of finding number of shared regulated genes in A. fumigatus and C. neoformans : 0.002
+------------------------------------------------------------
+Orthologs between S. cerevisiae and C. neoformans : 4363 
+
+Differentially regulated genes in S. cerevisiae : 144
+Number of regulated genes in S. cerevisiae with ortholog in C. neoformans : 79 
+
+Differentially regulated genes in C. neoformans : 102
+Number of regulated genes in C. neoformans with ortholog in S. cerevisiae : 30 
+
+Number of shared regulated genes between S. cerevisiae and C. neoformans : 2
+Probability of finding number of shared regulated genes in S. cerevisiae and C. neoformans : 0.25
+------------------------------------------------------------

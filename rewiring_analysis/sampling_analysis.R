@@ -28,6 +28,8 @@ clean_af_up_genes = file.path(clean_reg_gene_dir,"afumigatus_up_regulated_genes.
 clean_sc_ca_genes = file.path(clean_reg_gene_dir,"scerevisiae_ca_regulated_genes.csv")
 clean_sc_ca_na_genes = file.path(clean_reg_gene_dir,"scerevisiae_ca_na_regulated_genes.csv")
 
+results_outfile = file.path("rewiring_analysis", "resampling_analysis.txt")
+file.remove(results_outfile)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #+ Setup: Load C. neoformans data from excel, include=FALSE
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -225,7 +227,8 @@ af_crz.genes = c(af_crz_up.df$gene, af_crz_down.df$gene)
 
 
 RunSamplingAnalysis = function(a_genes, b_genes, ortho_table, 
-                               a_species, b_species,num_samples=100,seed=NULL){
+                               a_species, b_species,num_samples=100,
+                               seed=NULL,outfile=""){
   if(!is.null(seed)){
     set.seed(seed)
   }
@@ -252,21 +255,21 @@ RunSamplingAnalysis = function(a_genes, b_genes, ortho_table,
   
   
   cat(paste("Orthologs between", a_species, "and", b_species,
-            ":", nrow(ortho_table), "\n"), fill=TRUE)
+            ":", nrow(ortho_table), "\n"), fill=TRUE,file=outfile,append=TRUE)
   cat(paste("Differentially regulated genes in", a_species, ":", 
-            a_num_genes), fill=TRUE)
+            a_num_genes), fill=TRUE,file=outfile,append=TRUE)
   cat(paste("Number of regulated genes in", a_species, "with ortholog in",
             b_species, ":",
-            a_num_genes_with_ortholog, "\n"), fill=TRUE)
+            a_num_genes_with_ortholog, "\n"), fill=TRUE,file=outfile,append=TRUE)
 
   cat(paste("Differentially regulated genes in", b_species, ":", 
-            b_num_genes), fill=TRUE)
+            b_num_genes), fill=TRUE,file=outfile,append=TRUE)
   cat(paste("Number of regulated genes in", b_species, "with ortholog in",
             a_species, ":",
-            b_num_genes_with_ortholog,"\n"), fill=TRUE)
+            b_num_genes_with_ortholog,"\n"), fill=TRUE,file=outfile,append=TRUE)
   cat(paste("Number of shared regulated genes between", a_species, "and",
             b_species, ":",
-            num_overlap_genes), fill=TRUE)
+            num_overlap_genes), fill=TRUE,file=outfile,append=TRUE)
   
   y = RepWrap(num_samples, a_genes = a_orthologs, b_genes = b_orthologs,
               a_gene_n = a_num_genes_with_ortholog,
@@ -276,8 +279,8 @@ RunSamplingAnalysis = function(a_genes, b_genes, ortho_table,
 
   cat(paste("Probability of finding number of shared regulated genes in", a_species, "and",
             b_species, ":",
-            sample_prob), fill=TRUE)
-  cat(paste0(rep("-", 60),collapse=""),fill=TRUE)
+            sample_prob), fill=TRUE,file=outfile,append=TRUE)
+  cat(paste0(rep("-", 60),collapse=""),fill=TRUE,file=outfile,append=TRUE)
 }
 
 SampleFunc = function(a_genes, b_genes, a_gene_n, b_gene_n, map_table){
@@ -296,13 +299,15 @@ RepWrap = function(n, a_genes, b_genes, a_gene_n, b_gene_n, map_table) {
 }
 
 RunSamplingAnalysis(af_crz.genes, cn.df$gene, cn_af_ortho.sep.df, 
-                    "A. fumigatus", "C. neoformans",num_samples=1000,seed=1)
+                    "A. fumigatus", "C. neoformans",num_samples=1000,seed=1,
+                    outfile=results_outfile)
 
 # RunSamplingAnalysis(af_crz.genes, cn.df$gene, cn_af.nodups, 
 #                     "A. fumigatus", "C. neoformans",num_samples=1000,seed=2)
 
 RunSamplingAnalysis(sc_genes, cn.df$gene, cn_sc_ortho.sep.df,
-                    "S. cerevisiae", "C. neoformans",num_samples=1000,seed=3)
+                    "S. cerevisiae", "C. neoformans",num_samples=1000,seed=3,
+                    outfile=results_outfile)
 
 # RunSamplingAnalysis(sc_genes, cn.df$gene, cn_sc.nodups,
 #                     "S. cerevisiae", "C. neoformans",num_samples=1000,seed=4)
