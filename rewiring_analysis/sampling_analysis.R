@@ -12,10 +12,11 @@ library(knitr)
 #+ Setup: Setup Paths, include=FALSE
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 getwd()
-expression_data_dir= "fold_change_tables"
+list.files("rewiring_analysis/")
+expression_data_dir= "rewiring_analysis/fold_change_tables"
+ortholog_data_dir= "rewiring_analysis/ortholog_tables"
 eve.excelfile = file.path(expression_data_dir,
                           "Gene datasets for A fumigatus and S cerevisiae Crz1 genes.xlsx")
-ortholog_data_dir= "ortholog_tables"
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #+ Setup: Load C. neoformans data from excel, include=FALSE
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
