@@ -36,31 +36,31 @@ sc_genes = c(sc_cna_ca, sc_cna_ca_na)
 cn_genes = scan(clean_cn_reg_genes, what=character())
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#+ Setup: Load C. neoformans data from excel, include=FALSE
+#+ Setup: Load C. neoformans - A. fumigatus ortholog data, include=FALSE
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-##-----------------------------------------------------------------------------
 cn_af_ortho.df = read.delim(file.path(ortholog_data_dir,"h99_afumigatus_orthologs.tsv"),
                             stringsAsFactors = FALSE) %>%
-                              transmute(gene=X.Gene.ID.,
-                                        ortholog=X.Input.Ortholog.s..,
-                                        paralog_count=X.Paralog.count.,
-                                        ortholog_count=X.Ortholog.count.)
-##-----------------------------------------------------------------------------
+  transmute(gene=X.Gene.ID.,
+            ortholog=X.Input.Ortholog.s..,
+            paralog_count=X.Paralog.count.,
+            ortholog_count=X.Ortholog.count.)
+#+ Separate Af-Cn paralogs into separate rows
+cn_af_ortho.sep.df = cn_af_ortho.df %>% separate_rows(ortholog,sep=",")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#+ Setup: Load C. neoformans - S. cerevisiae ortholog data, include=FALSE
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cn_sc_ortho.df = read.delim(file.path(ortholog_data_dir,"h99_scerevisiae_orthologs.tsv"),
                             stringsAsFactors = FALSE) %>%
   transmute(gene=X.Gene.ID.,
             ortholog=X.Input.Ortholog.s..,
             paralog_count=X.Paralog.count.,
             ortholog_count=X.Ortholog.count.)
-##-----------------------------------------------------------------------------
+
 #+ Separate Cn-Sc paralogs into separate rows
 cn_sc_ortho.sep.df = cn_sc_ortho.df %>% separate_rows(ortholog,sep=",")
 
-##-----------------------------------------------------------------------------
-#+ Separate Af-Cn paralogs into separate rows
-cn_af_ortho.sep.df = cn_af_ortho.df %>% separate_rows(ortholog,sep=",")
-
-
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 RunSamplingAnalysis = function(a_genes, b_genes, ortho_table, 
                                a_species, b_species,num_samples=100,
                                seed=NULL,outfile=""){
