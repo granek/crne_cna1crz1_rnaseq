@@ -61,6 +61,19 @@ cn_sc_ortho.df = read.delim(file.path(ortholog_data_dir,"h99_scerevisiae_ortholo
 cn_sc_ortho.sep.df = cn_sc_ortho.df %>% separate_rows(ortholog,sep=",")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#+ Setup: Load S. cerevisiae - A. fumigatus ortholog data, include=FALSE
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+sc_af_ortho.df = read.delim(file.path(ortholog_data_dir,"scerevisiae_afumigatus_orthologs.tsv"),
+                            stringsAsFactors = FALSE) %>%
+  transmute(gene=X.Gene.ID.,
+            ortholog=X.Input.Ortholog.s..,
+            paralog_count=X.Paralog.count.,
+            ortholog_count=X.Ortholog.count.)
+
+#+ Separate Cn-Sc paralogs into separate rows
+sc_af_ortho.sep.df = sc_af_ortho.df %>% separate_rows(ortholog,sep=",")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 RunSamplingAnalysis = function(a_genes, b_genes, ortho_table, 
                                a_species, b_species,num_samples=100,
                                seed=NULL,outfile=""){
@@ -135,6 +148,10 @@ RepWrap = function(n, a_genes, b_genes, a_gene_n, b_gene_n, map_table) {
 
 RunSamplingAnalysis(af_crz_genes, cn_genes, cn_af_ortho.sep.df, 
                     "A. fumigatus", "C. neoformans",num_samples=1000,seed=1,
+                    outfile=results_outfile)
+
+RunSamplingAnalysis(af_crz_genes, sc_genes, sc_af_ortho.sep.df, 
+                    "A. fumigatus", "S. cerevisiae",num_samples=1000,seed=2,
                     outfile=results_outfile)
 
 RunSamplingAnalysis(sc_genes, cn_genes, cn_sc_ortho.sep.df,
