@@ -45,81 +45,20 @@ cn_af_ortho.df = read.delim(file.path(ortholog_data_dir,"h99_afumigatus_ortholog
                                         ortholog=X.Input.Ortholog.s..,
                                         paralog_count=X.Paralog.count.,
                                         ortholog_count=X.Ortholog.count.)
-
-cn_af.nodups = cn_af_ortho.df %>%
-  filter(paralog_count == 0) %>%
-  filter(!str_detect(ortholog, ","))
 ##-----------------------------------------------------------------------------
-# cn_af.nodups %>% 
-#   filter(gene %in% af_ca.genes) %>%
-#   filter(ortholog %in% cn_genes)
-# 
-# cn_af.nodups %>% 
-#   filter(ortholog %in% cn_genes)
-##-----------------------------------------------------------------------------
-#+ Sc-Cn eliminate_multiple_mappings
-list.files("rewiring_analysis/ortholog_tables/")
-
 cn_sc_ortho.df = read.delim(file.path(ortholog_data_dir,"h99_scerevisiae_orthologs.tsv"),
                             stringsAsFactors = FALSE) %>%
   transmute(gene=X.Gene.ID.,
             ortholog=X.Input.Ortholog.s..,
             paralog_count=X.Paralog.count.,
             ortholog_count=X.Ortholog.count.)
-
-cn_sc.nodups = cn_sc_ortho.df %>%
-  filter(paralog_count == 0) %>%
-  filter(!str_detect(ortholog, ","))
-
-##-----------------------------------------------------------------------------
-#+ explore Sc-Cn overlapping genes
-# sc_genes = c(sc_cna_ca.df$gene, sc_cna_ca_na.df$gene)
-
-# cn_sc.nodups %>% 
-#   filter(gene %in% sc_genes) %>%
-#   filter(ortholog %in% cn_genes)
-# 
-# cn_af.nodups %>% 
-#   filter(ortholog %in% cn_genes)
-
 ##-----------------------------------------------------------------------------
 #+ Separate Cn-Sc paralogs into separate rows
 cn_sc_ortho.sep.df = cn_sc_ortho.df %>% separate_rows(ortholog,sep=",")
 
 ##-----------------------------------------------------------------------------
-#+ explore Cn-Sc overlapping genes
-# cn_sc_ortho.sep.df %>% 
-#   filter(gene %in% sc_genes) %>%
-#   filter(ortholog %in% cn_genes)
-# 
-# cn_sc_ortho.sep.df %>% 
-#   filter(gene %in% sc_genes) %>% dim
-# 
-# cn_sc_ortho.sep.df %>% 
-#   filter(ortholog %in% cn_genes) %>% dim
-
-##-----------------------------------------------------------------------------
-##-----------------------------------------------------------------------------
-##-----------------------------------------------------------------------------
-##-----------------------------------------------------------------------------
-##-----------------------------------------------------------------------------
 #+ Separate Af-Cn paralogs into separate rows
 cn_af_ortho.sep.df = cn_af_ortho.df %>% separate_rows(ortholog,sep=",")
-# dim(cn_af_ortho.df)
-# dim(cn_af_ortho.sep.df)
-# 
-# cn_af_ortho.df %>% filter(str_detect(ortholog, ",")) %>% head
-# 
-# cn_af_ortho.sep.df %>% filter(ortholog == "CNAG_00688")
-##-----------------------------------------------------------------------------
-#+ explore Af-Cn overlapping genes redux
-# cn_af_ortho.sep.df %>% 
-#   filter(gene %in% af_crz_genes) %>%
-#   filter(ortholog %in% cn_genes)
-# 
-# cn_af.nodups %>% 
-#   filter(gene %in% af_crz_genes) %>%
-#   filter(ortholog %in% cn_genes)
 
 
 RunSamplingAnalysis = function(a_genes, b_genes, ortho_table, 
@@ -198,15 +137,10 @@ RunSamplingAnalysis(af_crz_genes, cn_genes, cn_af_ortho.sep.df,
                     "A. fumigatus", "C. neoformans",num_samples=1000,seed=1,
                     outfile=results_outfile)
 
-# RunSamplingAnalysis(af_crz_genes, cn_genes, cn_af.nodups, 
-#                     "A. fumigatus", "C. neoformans",num_samples=1000,seed=2)
-
 RunSamplingAnalysis(sc_genes, cn_genes, cn_sc_ortho.sep.df,
                     "S. cerevisiae", "C. neoformans",num_samples=1000,seed=3,
                     outfile=results_outfile)
 
-# RunSamplingAnalysis(sc_genes, cn_genes, cn_sc.nodups,
-#                     "S. cerevisiae", "C. neoformans",num_samples=1000,seed=4)
 #'******************************************************************************
 #' # Further Analyses
 #+ Todo List, include=FALSE
