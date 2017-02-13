@@ -8,7 +8,11 @@ orgmode_playing/
 rstudio/
 .Rproj.user
 raw_data/
+
 packrat/lib*/
 packrat/src/
-manuscript
-rewiring_analysis/papers
+manuscript/
+rewiring_analysis/papers/
+
+local_password.sh
+
