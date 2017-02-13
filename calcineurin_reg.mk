@@ -11,6 +11,14 @@ SHELL := /bin/bash
 .PRECIOUS:
 .SECONDARY:
 #--------------------------------------------------
+# ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/149/245/GCF_000149245.1_CNA3/GCF_000149245.1_CNA3_genomic.fna.gz
+# ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/149/245/GCF_000149245.1_CNA3/GCF_000149245.1_CNA3_genomic.gff.gz
+
+# ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/149/245/GCA_000149245.3_CNA3/GCA_000149245.3_CNA3_genomic.fna.gz
+# ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/149/245/GCA_000149245.3_CNA3/GCA_000149245.3_CNA3_genomic.gff.gz
+# http://archive.broadinstitute.org/ftp/pub/annotation/fungi/cryptococcus_neoformans/genomes/cryptococcus_neoformans_var._grubii_h99/cryptococcus_neoformans_var._grubii_h99__cna3__3_contigs.fasta.gz
+# http://archive.broadinstitute.org/ftp/pub/annotation/fungi/cryptococcus_neoformans/genomes/cryptococcus_neoformans_var._grubii_h99/cryptococcus_neoformans_var._grubii_h99__cna3__3_transcripts.gtf
+
 GENOME_DIR=genome
 INDEXBASE=$(GENOME_DIR)/h99_2
 SEQ_URL="http://www.broadinstitute.org/annotation/genome/cryptococcus_neoformans/download/?sp=EASupercontigsFasta&sp=SCNA2&sp=S.gz"
