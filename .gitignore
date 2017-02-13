@@ -8,6 +8,7 @@ orgmode_playing/
 rstudio/
 .Rproj.user
 raw_data/
+workspace/
 
 packrat/lib*/
 packrat/src/
