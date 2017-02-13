@@ -15,3 +15,5 @@ RAW_DATA="$HOST_SCRATCH/raw_data"
 TIME_ZONE="-e TZ=America/New_York -v /etc/timezone:/etc/timezone"
 
 PORT_NUMBER=8784
+
+echo $DOCKER_IMAGE
