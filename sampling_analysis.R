@@ -44,7 +44,7 @@ cn_af_ortho.df = read.delim(file.path(ortholog_data_dir,"h99_afumigatus_ortholog
             ortholog=X.Input.Ortholog.s..,
             paralog_count=X.Paralog.count.,
             ortholog_count=X.Ortholog.count.)
-#+ Separate Af-Cn paralogs into separate rows
+
 cn_af_ortho.sep.df = cn_af_ortho.df %>% separate_rows(ortholog,sep=",")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -57,7 +57,6 @@ cn_sc_ortho.df = read.delim(file.path(ortholog_data_dir,"h99_scerevisiae_ortholo
             paralog_count=X.Paralog.count.,
             ortholog_count=X.Ortholog.count.)
 
-#+ Separate Cn-Sc paralogs into separate rows
 cn_sc_ortho.sep.df = cn_sc_ortho.df %>% separate_rows(ortholog,sep=",")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -70,7 +69,6 @@ sc_af_ortho.df = read.delim(file.path(ortholog_data_dir,"scerevisiae_afumigatus_
             paralog_count=X.Paralog.count.,
             ortholog_count=X.Ortholog.count.)
 
-#+ Separate Cn-Sc paralogs into separate rows
 sc_af_ortho.sep.df = sc_af_ortho.df %>% separate_rows(ortholog,sep=",")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,6 +144,9 @@ RepWrap = function(n, a_genes, b_genes, a_gene_n, b_gene_n, map_table) {
                           map_table=map_table))
 }
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#+ Run Analysis
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 RunSamplingAnalysis(af_crz_genes, cn_genes, cn_af_ortho.sep.df, 
                     "A. fumigatus", "C. neoformans",num_samples=1000,seed=1,
                     outfile=results_outfile)
