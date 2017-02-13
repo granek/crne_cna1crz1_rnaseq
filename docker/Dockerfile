@@ -34,7 +34,7 @@ RUN git clone https://github.com/ExpressionAnalysis/ea-utils.git && \
     make install && \
     rm -rf ../../ea-utils/
 
-RUN Rscript -e "install.packages(pkgs = c('optparse','RColorBrewer','gplots'), \
+RUN Rscript -e "install.packages(pkgs = c('optparse','RColorBrewer','gplots','formatR','rprojroot','rmarkdown','dplyr','tidyr'), \
     repos='https://cran.revolutionanalytics.com/', \
     dependencies=TRUE)" && \
     Rscript -e "source('https://bioconductor.org/biocLite.R'); \
