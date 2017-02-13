@@ -5,31 +5,63 @@
 # https://support.rstudio.com/hc/en-us/community/posts/202827628-Using-HTTPS-instead-of-HTTP
 # https://www.digitalocean.com/community/tutorials/how-to-configure-nginx-with-ssl-as-a-reverse-proxy-for-jenkins
 
-PASS="8_juggleD_albiNo_12_eleVens_cRush"
-DOCKER_MNTPOINT="/home/rstudio/crne_cna1crz1_rnaseq"
-HOST_BASE="$HOME/crne_cna1crz1_rnaseq"
-HOST_SCRATCH="/mnt/ibiem_scratch/Members/josh/crne_cna1crz1_rnaseq"
-WORKSPACE="$HOST_SCRATCH/workspace"
-RAW_DATA="$HOST_SCRATCH/raw_data"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DEFINITION_FILE="${DIR}/current_docker_image.sh"
+PASS_FILE="${DIR}/local_password.sh"
+echo $DEFINITION_FILE
+echo $PASS_FILE
+
+source $DEFINITION_FILE
+
+if [ -e  $PASS_FILE ] ; then
+    source $PASS_FILE
+    # $PASS_FILE should contain only the following definition, replacing "MYpassword" with a high quality password
+    # PASS="MYpassword"
+
+else
+    PASS="8_juggleD_albiNo_12_eleVens_cRush"
+fi
+
+echo $PASS
+
+
+if [[ -z $3 ]] ; then
+    echo "Using default PORT: $PORT_NUMBER"
+else				
+    PORT_NUMBER=$3
+    echo "Using PORT from command line: '$PORT_NUMBER'"
+fi
 
 if [ "$1" == "shell" ]; then
     DOCKER_COMMAND="/bin/bash"
-    CONTAINER_NAME="rstudio_shell"
+    CONTAINER_NAME="rstudio_shell_${DOCKER_IMAGE_TAG}"
     DOCKER_ARGS="--rm --interactive --tty --user rstudio"
     echo "------------------------------"
     echo "In docker run the following:"
     echo "cd $DOCKER_MNTPOINT"
-    echo "make --dry-run fastqs -j4 -f analyze_culture_sequences.mk --warn-undefined-variables NUMTHREADS=4 RAW_DATA_DIR=$DOCKER_MNTPOINT/raw_data"
+    echo "make --dry-run --warn-undefined-variables"
+    # echo "make --dry-run fastqs -j4 -f analyze_culture_sequences.mk --warn-undefined-variables NUMTHREADS=4 RAW_DATA_DIR=$DOCKER_MNTPOINT/raw_data"
     echo "------------------------------"
+elif [ "$1" == "root" ]; then
+    DOCKER_COMMAND="/bin/bash"
+    CONTAINER_NAME="rstudio_root_${DOCKER_IMAGE_TAG}"
+    DOCKER_ARGS="--rm --interactive --tty"
 elif [ "$1" == "rstudio" ]; then
     DOCKER_COMMAND=""
-    CONTAINER_NAME="rstudio_web"
-    DOCKER_ARGS="--detach --publish 8787:8787 -e PASSWORD=$PASS"
+    CONTAINER_NAME="rstudio_web_${DOCKER_IMAGE_TAG}"
+    DOCKER_ARGS="--detach --publish $PORT_NUMBER:8787 -e PASSWORD=$PASS"
 else
    echo "Must supply command line argument! Should be run as one of the following commands:"
-   echo "'$0 shell'"
-   echo "'$0 rstudio'"
+   echo "'$0 [shell|root|rstudio] (CONTAINER_NAME|default) (PORT_NUMBER)'"
+   echo "The first argument (in []) is required, the second and third are optional"
    exit 1
+fi
+
+if [[ -z $2 ||  "$2" == "default" ]] ; then
+    echo "Using default CONTAINER_NAME: $CONTAINER_NAME"
+else				
+    CONTAINER_NAME=$2
+    echo "Using CONTAINER_NAME from command line: '$CONTAINER_NAME'"
 fi
 
 
@@ -46,11 +78,18 @@ if [ ! -d "$RAW_DATA" ]; then
     exit 1
 fi
 
-docker run $DOCKER_ARGS \
+docker run $DOCKER_ARGS $TIME_ZONE \
        --name $CONTAINER_NAME \
        -v $HOST_BASE:$DOCKER_MNTPOINT \
-       -v $WORKSPACE:$DOCKER_MNTPOINT/workspace \
-       -v $RAW_DATA:$DOCKER_MNTPOINT/raw_data \
-       granek/rnaseq:v0rc0 \
+       -v $WORKSPACE:$WORKSPACE_MNTPOINT \
+       -v $RAW_DATA:$DATA_MNTPOINT \
+       $DOCKER_IMAGE \
        $DOCKER_COMMAND
 
+# --------------------------------------------------
+# GIT ENV variables (not sure if they are working)
+# -e GIT_AUTHOR_NAME="Josh Granek" \
+# -e GIT_AUTHOR_EMAIL="josh@duke.edu" \
+# -e GIT_COMMITTER_NAME="Josh Granek" \
+# -e GIT_COMMITTER_EMAIL="josh@duke.edu" \
+# --------------------------------------------------

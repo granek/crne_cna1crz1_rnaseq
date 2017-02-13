@@ -9,3 +9,4 @@ rstudio/
 .Rproj.user
 
 raw_data/
+local_password.sh
