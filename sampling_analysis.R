@@ -88,10 +88,11 @@ RunSamplingAnalysis = function(a_genes, b_genes, ortho_table,
     filter(ortholog %in% b_genes) %>% 
     nrow
   
-  num_overlap_genes = ortho_table %>% 
+  overlap_genes = ortho_table %>% 
     filter(gene %in% a_genes) %>% 
-    filter(ortholog %in% b_genes) %>% 
-    nrow
+    filter(ortholog %in% b_genes)
+  
+  num_overlap_genes = nrow(overlap_genes)
   
   a_orthologs = unique(ortho_table$gene)
   b_orthologs = unique(ortho_table$ortholog)
@@ -127,6 +128,8 @@ RunSamplingAnalysis = function(a_genes, b_genes, ortho_table,
             b_species, ":",
             sample_prob), fill=TRUE,file=outfile,append=TRUE)
   cat(paste0(rep("-", 60),collapse=""),fill=TRUE,file=outfile,append=TRUE)
+  
+  return(overlap_genes)
 }
 
 SampleFunc = function(a_genes, b_genes, a_gene_n, b_gene_n, map_table){
@@ -147,17 +150,70 @@ RepWrap = function(n, a_genes, b_genes, a_gene_n, b_gene_n, map_table) {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #+ Run Analysis
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-RunSamplingAnalysis(af_crz_genes, cn_genes, cn_af_ortho.sep.df, 
-                    "A. fumigatus", "C. neoformans",num_samples=1000,seed=1,
-                    outfile=results_outfile)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#+ Comparison 1.1, echo=FALSE
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+organism_a = "A. fumigatus"
+organism_b = "C. neoformans"
+# #' `r kable(af_counts.df)`
 
-RunSamplingAnalysis(af_crz_genes, sc_genes, sc_af_ortho.sep.df, 
-                    "A. fumigatus", "S. cerevisiae",num_samples=1000,seed=2,
-                    outfile=results_outfile)
+cn_af_overlap.df = RunSamplingAnalysis(af_crz_genes, cn_genes, 
+                                       cn_af_ortho.sep.df, 
+                                       organism_a, organism_b,
+                                       num_samples=1000,seed=1,
+                                       outfile=results_outfile)
 
-RunSamplingAnalysis(sc_genes, cn_genes, cn_sc_ortho.sep.df,
-                    "S. cerevisiae", "C. neoformans",num_samples=1000,seed=3,
-                    outfile=results_outfile)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#' ### Calcineurin-dependent genes shared between `r organism_a` and `r organism_b`
+#+ Comparison 1.2, echo=FALSE
+cn_af_overlap.df %>% transmute(a=gene, b=ortholog) %>% kable
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#+ Comparison 2.1, echo=FALSE
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+organism_a = "A. fumigatus"
+organism_b = "S. cerevisiae"
+sc_af_overlap.df = RunSamplingAnalysis(af_crz_genes, sc_genes, 
+                                       sc_af_ortho.sep.df, 
+                                       organism_a, organism_b,
+                                       num_samples=1000,seed=2,
+                                       outfile=results_outfile)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#' ### Calcineurin-dependent genes shared between `r organism_a` and `r organism_b`
+#+ Comparison 2.2, echo=FALSE
+sc_af_overlap.df %>% transmute(a=gene, b=ortholog) %>% kable
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#+ Comparison 3.1, echo=FALSE
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+organism_a = "S. cerevisiae"
+organism_b = "C. neoformans"
+cn_sc_overlap.df = RunSamplingAnalysis(sc_genes, cn_genes, 
+                                       cn_sc_ortho.sep.df,
+                                       organism_a, organism_b,
+                                       num_samples=1000,seed=3,
+                                       outfile=results_outfile)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#' ### Calcineurin-dependent genes shared between `r organism_a` and `r organism_b`
+#+ Comparison 3.2, echo=FALSE
+cn_sc_overlap.df %>% transmute(a=gene, b=ortholog) %>% kable
+
+
+#' ### Calcineurin-dependent genes shared among all three species
+#+ 3-way comparison, echo=FALSE
+inner_join(cn_af_overlap.df,cn_sc_overlap.df, by = "ortholog" ) %>% 
+  transmute(a=gene.x, b=ortholog, c=gene.y) %>% kable
+
+#' Note that there are two homologs of CNAG_01232	and YGL006W in A. fumigatus: Afu3g10690 and Afu7g01030
+  
+
+# inner_join(cn_af_overlap.df,sc_af_overlap.df, by = "gene" )
+
+# inner_join(sc_af_overlap.df,cn_sc_overlap.df, by = c("ortholog","gene"))
+
 
 #'******************************************************************************
 #' # Further Analyses
